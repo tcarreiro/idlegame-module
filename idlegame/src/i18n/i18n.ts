@@ -1,6 +1,6 @@
-import { createI18n } from 'vue-i18n'
-import PtBrTranslations from './pt_br.json'
-import { LocaleAppConfigs, type LocaleAppProperty } from '@/models/locale-masks'
+import { createI18n } from "vue-i18n";
+import PtBrTranslations from "./pt_br.json";
+import { LocaleAppConfigs, type LocaleAppProperty } from "@/models/locale-masks";
 
 
 export const i18nApplication = createI18n({
