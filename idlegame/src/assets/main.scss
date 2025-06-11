@@ -1,0 +1,75 @@
+@import './base.css';
+
+:root {
+  --tilesize-xl: 64px;
+  --tilesize-m: 48px;
+  --tilesize-xs: 32px;
+}
+
+//// WORLD ////
+///
+
+.world-map {
+  display: grid;
+  grid-template-columns: repeat(11, var(--tilesize-xl));
+  grid-template-rows: repeat(11, var(--tilesize-xl));
+  gap: 0;
+}
+
+.tile {
+  width: var(--tilesize-xl);
+  height: var(--tilesize-xl);
+  object-fit: contain;
+  position: relative;
+}
+
+
+///
+/// HUD
+///
+///
+
+
+///
+///
+///
+///
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  font-weight: normal;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .world-map {
+    grid-template-columns: repeat(11, var(--tilesize-m));
+    grid-template-rows: repeat(11, var(--tilesize-m));
+  }
+
+  .tile {
+    width: var(--tilesize-m);
+    height: var(--tilesize-m);
+  }
+}
+
+@media (max-width: 768px) {
+  .world-map {
+    grid-template-columns: repeat(11, var(--tilesize-xs));
+    grid-template-rows: repeat(11, var(--tilesize-xs));
+  }
+
+  .tile {
+    width: var(--tilesize-xs);
+    height: var(--tilesize-xs);
+  }
+}

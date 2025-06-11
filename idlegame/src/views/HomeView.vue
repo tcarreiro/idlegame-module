@@ -27,10 +27,4 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
-    <h2>Mensagens do WebSocket:</h2>
-    <ul>
-      <li v-for="(msg, idx) in messages" :key="idx">{{ msg }}</li>
-    </ul>
-  </div>
 </template>
