@@ -5,7 +5,9 @@ import SockJS from 'sockjs-client'
 const socketUrl = 'http://localhost:8081/ws'
 
 let stompClient: Client | null = null
-let subscriptions: Record<string, StompSubscription> = {} // Gerencia múltiplos tópicos
+let isConnected = false;
+
+const subscriptions = new Map<string, (message: IMessage) => void>();
 
 /**
  * Conecta ao WebSocket com STOMP
@@ -17,17 +19,28 @@ export const connectWebSocket = (onConnect?: () => void, onError?: (error: strin
 
   stompClient = new Client({
     webSocketFactory: () => new SockJS(socketUrl),
-    debug: (str) => console.log('STOMP:', str),
+    // debug: (str) => console.log('STOMP:', str),
     reconnectDelay: 5000,
     onConnect: () => {
-      console.log('✅ WebSocket conectado')
-      onConnect?.()
+      isConnected = true;
+      // Reinscreve todos os tópicos
+      subscriptions.forEach((callback, topic) => {
+        stompClient!.subscribe(topic, callback);
+      });
+
+      if (onConnect) onConnect();
     },
     onStompError: (frame) => {
-      console.error('❌ Erro STOMP:', frame.headers['message'])
-      onError?.(frame.headers['message'])
+      onError?.(frame.headers["message"]);
     },
-  })
+    onWebSocketError: (error) => {
+      if (onError) onError(error);
+    },
+    onDisconnect: () => {
+      isConnected = false;
+      console.warn("WebSocket desconectado");
+    },
+  });
 
   stompClient.activate()
 }
@@ -44,7 +57,7 @@ export const sendMessage = (destination: string, body: any) => {
       body: JSON.stringify(body),
     })
   } else {
-    console.warn('⚠️ Tentativa de envio antes da conexão estar ativa.')
+    console.warn('Tentativa de envio antes da conexão estar ativa.')
   }
 }
 
@@ -53,26 +66,20 @@ export const sendMessage = (destination: string, body: any) => {
  * @param topic ex: '/topic/game-events'
  * @param onMessage callback para mensagens recebidas
  */
-export const subscribe = (topic: string, onMessage: (msg: IMessage) => void): void => {
-  if (!stompClient || !stompClient.connected) {
-    console.warn(`⚠️ Cliente STOMP ainda não conectado, subscribe adiado: ${topic}`)
-    return
-  }
+export function subscribe(topic: string, callback: (message: IMessage) => void) {
+  subscriptions.set(topic, callback);
 
-  if (subscriptions[topic]) {
-    subscriptions[topic].unsubscribe()
+  if (isConnected) {
+    stompClient!.subscribe(topic, callback);
   }
-
-  subscriptions[topic] = stompClient.subscribe(topic, onMessage)
 }
 
 /**
  * Cancela uma assinatura de tópico
  * @param topic tópico STOMP a cancelar
  */
-export const unsubscribe = (topic: string): void => {
-  subscriptions[topic]?.unsubscribe()
-  delete subscriptions[topic]
+export function unsubscribe(topic: string) {
+  subscriptions.delete(topic)
 }
 
 /**
@@ -80,7 +87,7 @@ export const unsubscribe = (topic: string): void => {
  */
 export const disconnectWebSocket = (): void => {
   Object.values(subscriptions).forEach((s) => s.unsubscribe())
-  subscriptions = {}
+  subscriptions.clear();
   stompClient?.deactivate()
   stompClient = null
 }
