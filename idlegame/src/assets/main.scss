@@ -1,0 +1,257 @@
+@import './base.css';
+
+:root {
+  --dark-border: #161616;
+  --medium-border: #252525;
+  --light-border: #757575;
+  --color-grey-25: 160, 160, 160;
+  --color-grey-50: 110, 110, 110;
+  --color-grey-75: 45, 45, 45;
+  --color-green-25: 80, 145, 80;
+  --color-green-50: 50, 160, 50;
+  --color-green-75: 25, 45, 25;
+  --color-blue-25: 80, 80, 145;
+  --color-blue-50: 50, 50, 160;
+  --color-blue-75: 25, 25, 45;
+}
+
+.bg{
+  $colors: "green", "grey", "blue";
+  $ids: 25, 50, 75;
+
+  @each $color in $colors {
+    @each $id in $ids {
+      &-#{$color}-#{$id} {
+        background-color: rgb(var(--color-#{$color}-#{$id}))!important;
+      }
+    }
+  }
+}
+
+.m {
+  $ids: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
+
+  @each $id in $ids {
+    &t-#{$id} {
+      margin-top: calc(#{$id}*0.25rem) !important;
+    }
+
+    &b-#{$id} {
+      margin-bottom: calc(#{$id}*0.25rem) !important;
+    }
+
+    &l-#{$id} {
+      margin-left: calc(#{$id}*0.25rem) !important;
+    }
+
+    &r-#{$id} {
+      margin-right: calc(#{$id}*0.25rem) !important;
+
+    }&-#{$id} {
+      margin-right: calc(#{$id}*0.25rem) !important;
+      margin-left: calc(#{$id}*0.25rem) !important;
+      margin-bottom: calc(#{$id}*0.25rem) !important;
+      margin-top: calc(#{$id}*0.25rem) !important;
+    }
+  }
+}
+
+.p {
+  $ids: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
+
+  @each $id in $ids {
+    &t-#{$id} {
+      padding-top: calc(#{$id}*0.25rem) !important;
+    }
+
+    &b-#{$id} {
+      padding-bottom: calc(#{$id}*0.25rem) !important;
+    }
+
+    &l-#{$id} {
+      padding-left: calc(#{$id}*0.25rem) !important;
+    }
+
+    &r-#{$id} {
+      padding-right: calc(#{$id}*0.25rem) !important;
+    }
+
+    &-#{$id} {
+      padding-right: calc(#{$id}*0.25rem) !important;
+      padding-left: calc(#{$id}*0.25rem) !important;
+      padding-bottom: calc(#{$id}*0.25rem) !important;
+      padding-top: calc(#{$id}*0.25rem) !important;
+    }
+  }
+}
+
+.justify-content {
+  &-start {
+    justify-content: flex-start!important;
+  }
+  &-end {
+    justify-content: flex-end!important;
+  }
+  &-center {
+    justify-content: center!important;
+  }
+  &-between {
+    justify-content: space-between!important;
+  }
+  &-around {
+    justify-content: space-around!important;
+  }
+  &-evenly {
+    justify-content: space-evenly!important;
+  }
+}
+
+.w-full {
+  width: 100% !important;
+}
+
+.h-full {
+  height: 100% !important;
+}
+
+.flex {
+  display: flex !important;
+}
+
+.flex-column {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.flex-wrap{
+  flex-wrap: wrap;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+.overflow-y-hidden {
+  overflow-y: hidden !important;
+}
+
+.overflow-y-auto {
+  overflow-y: auto !important;
+}
+
+.overflow-y-scroll {
+  overflow-y: scroll !important;
+}
+
+//// WORLD ////
+///
+
+.thin-border {
+  border-right: 1px solid var(--light-border);
+  border-bottom: 1px solid var(--light-border);
+  border-top: 1px solid var(--dark-border);
+  border-left: 1px solid var(--dark-border);
+}
+
+.thin-border-inverted {
+  border-top: 1px solid var(--light-border);
+  border-left: 1px solid var(--light-border);
+  border-right: 1px solid var(--dark-border);
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.thick-border {
+  border-top: 2px solid var(--light-border);
+  border-left: 2px solid var(--light-border);
+  border-right: 2px solid var(--medium-border);
+  border-bottom: 2px solid var(--medium-border);
+}
+
+.thick-border-inverted {
+  border-right: 2px solid var(--light-border);
+  border-bottom: 2px solid var(--light-border);
+  border-top: 2px solid var(--medium-border);
+  border-left: 2px solid var(--medium-border);
+}
+
+
+///
+/// HUD
+///
+///
+
+.noise-container {
+  background-image: url('/sprites/background/noise.png');
+  background-blend-mode: soft-light;
+}
+
+.cross-container {
+  background-image: url('/sprites/background/cross_stripes.png');
+  background-blend-mode: soft-light;
+}
+
+.scroll-custom {
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-image: url('/sprites/background/scroll_thumb.png');
+    background-repeat: no-repeat;
+    background-size: cover; // ou `auto` se preferir
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    filter: brightness(1.2);
+  }
+}
+
+///
+///
+///
+///
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  font-weight: normal;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .world-map {
+    grid-template-columns: repeat(11, var(--tilesize-m));
+    grid-template-rows: repeat(11, var(--tilesize-m));
+  }
+
+  .tile {
+    width: var(--tilesize-m);
+    height: var(--tilesize-m);
+  }
+}
+
+@media (max-width: 768px) {
+  .world-map {
+    grid-template-columns: repeat(11, var(--tilesize-xs));
+    grid-template-rows: repeat(11, var(--tilesize-xs));
+  }
+
+  .tile {
+    width: var(--tilesize-xs);
+    height: var(--tilesize-xs);
+  }
+}
