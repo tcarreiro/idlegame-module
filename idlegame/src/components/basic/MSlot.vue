@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { useCreatures } from '@/composable/entity.composable';
+import { useEntities } from '@/composable/entity.composable';
 import { useWorld } from '@/composable/world.composable';
-import type { EntityModel } from '@/models/entity.model';
+import type { Entity } from '@/models/entity.model';
 import { EntitySize } from '@/utils/constants';
+import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
 import { computed } from 'vue';
 
 const world = useWorld();
-const creatures = useCreatures();
+const creatures = useEntities();
 
 type MSlotProps = {
-  slot: EntityModel,
+  entity: Entity,
   size?:number,
   frameDuration?: number,
 };
@@ -20,36 +21,26 @@ const props = withDefaults(defineProps<MSlotProps>(), {
 
 const emit = defineEmits(["click"]);
 
-const canDrag = computed(()=>!!props.slot.entity.name && !props.slot.entity.onField);
-const sizeConfig = computed(()=>{
-  switch(props.slot.entitySize) {
-    case EntitySize.SMALL:
-      return creatures.SMALL_ENTITY_CONFIG
-    case EntitySize.MEDIUM:
-      return creatures.MEDIUM_ENTITY_CONFIG
-    case EntitySize.BIG:
-      return creatures.BIG_ENTITY_CONFIG
-  }
-});
+const canDrag = computed(()=>!!props.entity.name && !props.entity.onField);
 
 const frameIndex = computed(() => {
-  if (!props.slot) return 0;
-  return Math.floor(world.localFrameTimer.value / props.frameDuration) % props.slot.slotFrameId.length
+  if (!props.entity) return 0;
+  return getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.entity.renderData.slotFrameId.length);
 });
 
 const getFrame = computed(() => {
-  if (!props.slot) return;
+  if (!props.entity) return;
   let size = props.size;
-  if (!size) size = sizeConfig.value.creatureWorldSize;
-  const col = props.slot.orientation;
-  const row = props.slot.slotFrameId[frameIndex.value];
+  const sizeConfig = creatures.sizeConfig(props.entity.renderData.entitySizeConfig);
+  if (!size) size = sizeConfig.creatureWorldSize;
+
+  const col = props.entity.renderData.orientation;
+  const row = props.entity.renderData.slotFrameId[frameIndex.value];
+  const atlasNumCols = sizeConfig.atlasNumCols;
 
   return {
-    width: `${size}px`,
-    height: `${size}px`,
-    backgroundImage: `url('/sprites/creatures/${props.slot.entity.name}_${props.slot.entityState}.png')`,
-    backgroundSize: `${sizeConfig.value.atlasNumCols * sizeConfig.value.creatureWorldSize}px auto`,
-    backgroundPosition: `-${col * sizeConfig.value.creatureWorldSize + props.slot.slotOffset.x}px -${row * sizeConfig.value.creatureWorldSize + props.slot.slotOffset.y}px`,
+    ...drawSize(size),
+    ...getDrawFromAtlas("creatures",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size*2, col, row, props.entity.renderData.slotOffset),
   };
 });
 
@@ -85,18 +76,18 @@ const onDragStart = (event:DragEvent) => {
   event.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
 
   event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('application/json', JSON.stringify(props.slot));
+  event.dataTransfer.setData('application/json', JSON.stringify({source:"slot"}));
 
   // remove preview
   setTimeout(() => {
     document.body.removeChild(dragPreview);
   }, 0);
 
-  creatures.setIsDraggingCreature(true, props.slot);
+  creatures.setDraggingEntity(props.entity);
 }
 
 const onDragEnd = (event: DragEvent) => {
-  creatures.setIsDraggingCreature(false, null);
+  creatures.setDraggingEntity(null);
 }
 
 </script>
@@ -105,7 +96,7 @@ const onDragEnd = (event: DragEvent) => {
   <div
     class="slot-wrapper"
     :style="getFrame"
-    @click="emit('click', props.slot)"
+    @click="emit('click', props.entity)"
     :draggable="canDrag"
     @dragstart="onDragStart"
     @dragend="onDragEnd"

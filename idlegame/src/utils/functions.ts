@@ -1,8 +1,4 @@
-import { Rectangle, type Graphics } from 'pixi.js'
-
-export const drawRect = (rect: Rectangle, graphics: Graphics) => {
-  graphics.drawRect(rect.x, rect.y, rect.width, rect.height);
-}
+import { Rectangle } from "@/models/generics.model";
 
 export const newRectangle = (rect: Rectangle): Rectangle => {
   return new Rectangle(rect.x, rect.y, rect.width, rect.height);

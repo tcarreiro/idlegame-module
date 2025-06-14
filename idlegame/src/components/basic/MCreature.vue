@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { useCreatures } from '@/composable/entity.composable';
+import { useEntities } from '@/composable/entity.composable';
 import { useWorld } from '@/composable/world.composable';
-import type { EntityModel } from '@/models/entity.model';
-import { EntitySize } from '@/utils/constants';
+import type { Entity } from '@/models/entity.model';
+import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
 import { computed } from 'vue';
 
+///////
+/////// OnField Entity Component
+///////
+
 const world = useWorld();
-const creatures = useCreatures();
+const creatures = useEntities();
 
 type MCreatureProps = {
-  slot: EntityModel,
+  entity: Entity,
   size?:number,
   frameDuration?: number,
 };
@@ -20,41 +24,25 @@ const props = withDefaults(defineProps<MCreatureProps>(), {
 
 const emit = defineEmits(["click"]);
 
-const shouldIgnorePointerEvents = computed(() => {
-  return creatures.isDraggingEntity.value
-    && creatures.currentDragEntityRef.value?.entity.id !== props.slot.entity.id;
-});
-
-const sizeConfig = computed(()=>{
-  switch(props.slot.entitySize) {
-    case EntitySize.SMALL:
-      return creatures.SMALL_ENTITY_CONFIG
-    case EntitySize.MEDIUM:
-      return creatures.MEDIUM_ENTITY_CONFIG
-    case EntitySize.BIG:
-      return creatures.BIG_ENTITY_CONFIG
-  }
-});
-
 const frameIndex = computed(() => {
-  if (!props.slot) return 0;
-  return Math.floor(world.localFrameTimer.value / props.frameDuration) % props.slot.slotFrameId.length
+  if (!props.entity) return 0;
+  return getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.entity.renderData.slotFrameId.length);
 });
 
 const getFrame = computed(() => {
-  if (!props.slot) return;
+  if (!props.entity) return;
   let size = props.size;
-  if (!size) size = sizeConfig.value.creatureWorldSize;
-  const col = props.slot.orientation;
-  const row = props.slot.slotFrameId[frameIndex.value];
+  const sizeConfig = creatures.sizeConfig(props.entity.renderData.entitySizeConfig);
+  if (!size) size = sizeConfig.creatureWorldSize;
+
+  const col = props.entity.renderData.orientation;
+  const row = props.entity.renderData.slotFrameId[frameIndex.value];
   const offset = size - world.TILE_CONFIG.tileWorldSize;
+  const atlasNumCols = sizeConfig.atlasNumCols;
 
   return {
-    width: `${size}px`,
-    height: `${size}px`,
-    backgroundImage: `url('/sprites/creatures/${props.slot.entity.name}_${props.slot.entityState}.png')`,
-    backgroundSize: `${sizeConfig.value.atlasNumCols * size}px auto`,
-    backgroundPosition: `-${col * size}px -${row * size}px`,
+    ...drawSize(size),
+    ...getDrawFromAtlas("creatures",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size, col, row),
     transform: `translate(${-offset}px, ${-offset}px)`,
   };
 });
@@ -64,9 +52,8 @@ const getFrame = computed(() => {
 <template>
   <div
     class="creature-wrapper"
-    :class="{ 'no-pointer': shouldIgnorePointerEvents }"
     :style="getFrame"
-    @click="emit('click', props.slot)"
+    @click="emit('click', props.entity)"
     >
   </div>
 </template>
@@ -77,7 +64,4 @@ const getFrame = computed(() => {
   z-index:1000;
 }
 
-.no-pointer {
-  pointer-events: none;
-}
 </style>

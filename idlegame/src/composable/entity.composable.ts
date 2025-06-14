@@ -1,13 +1,15 @@
-import type { EntityModel } from "@/models/entity.model";
+import type { Entity } from "@/models/entity.model";
+import { EntitySize } from "@/utils/constants";
 import { ref, type Ref } from "vue";
 
-const isDraggingEntity: Ref<boolean> = ref(false);
-// const entitiesOnBox: { value: EntityModel | null } = { value: null };
-const entitiesOnTeam:Ref<Array<EntityModel>> = ref([]);
-const currentDragEntityRef: { value: EntityModel | null } = { value: null };
-const entitiesOnFieldRef = new Map<string, { value: EntityModel | null }>();
 
-export const useCreatures = () => {
+
+const entityBeingDrag: Ref<Entity|null> = ref(null);
+const entitiesOnTeam: Ref<Array<Entity>> = ref([]);
+const entitiesOnField: Ref<Array<Entity>> = ref([]);
+// const entitiesOnBox: Ref<Array<Entity>> = ref([]); //  FUTURE
+
+export const useEntities = () => {
 
   const SMALL_ENTITY_CONFIG = {
     creatureAtlasSize: 32,
@@ -36,51 +38,88 @@ export const useCreatures = () => {
     },
   };
 
-  const setEntityTeam = (entities: Array<EntityModel>) => {
-    entitiesOnTeam.value = entities;
-  }
-
-  const addEntityToTeam = (entityModel: EntityModel) => {
-    if (!entitiesOnTeam.value.find((ent) => ent.entity.id === entityModel.entity.id))
-      entitiesOnTeam.value.push(entityModel);
-  };
-
-  const removeEntityToTeam = (entityModel: EntityModel) => {
-    setEntityTeam(entitiesOnTeam.value.filter((ent) => ent.entity.id !== entityModel.entity.id));
-  };
-
-  const setIsDraggingCreature = (dragging: boolean, entityRef:EntityModel|null) => {
-    isDraggingEntity.value = dragging;
-    currentDragEntityRef.value = entityRef;
-  }
-
-  const addEntityOnField = (entityRef: EntityModel) => {
-    if (!entitiesOnFieldRef.has(entityRef.entity.id ?? "")) {
-      entitiesOnFieldRef.set(entityRef.entity.id, { value: entityRef });
+  const sizeConfig = (entitySize: EntitySize)=>{
+    switch(entitySize) {
+      case EntitySize.SMALL:
+        return SMALL_ENTITY_CONFIG
+      case EntitySize.MEDIUM:
+        return MEDIUM_ENTITY_CONFIG
+      case EntitySize.BIG:
+        return BIG_ENTITY_CONFIG
     }
   };
 
-  const getEntityRef = (entityId:string) => {
-    return entitiesOnFieldRef.get(entityId);
+  const setEntityTeam = (entities: Array<Entity>) => {
+    entitiesOnTeam.value = entities;
   }
 
-  const removeEntityFromField = (entityId: string) => {
-    entitiesOnFieldRef.delete(entityId);
+  const addEntityToTeam = (entity: Entity) => {
+    if (!entitiesOnTeam.value.some(e=>e.id===entity.id))
+      entitiesOnTeam.value.push(entity);
   };
 
+  const removeEntityToTeam = (entity: Entity|string) => {
+    const entityRef = getEntityOnTeam(entity);
+    if (entityRef) {
+      entitiesOnTeam.value = entitiesOnTeam.value.filter(e => e!==entityRef);
+      removeEntityFromField(entityRef);
+    }
+  };
+
+  const setDraggingEntity = (entity: Entity|string|null) => {
+    if (!entity) {
+      entityBeingDrag.value = null
+      return;
+    }
+    const entityRef = getEntityOnTeam(entity);
+    if (entityRef) {
+      entityBeingDrag.value = entityRef;
+    }
+  };
+
+  const addEntityToField = (entity: Entity|string) => {
+    const entityRef = getEntityOnTeam(entity);
+    if (entityRef && !entitiesOnField.value.includes(entityRef)) {
+      entityRef.onField = true;
+      entitiesOnField.value.push(entityRef);
+    }
+  };
+
+  const removeEntityFromField = (entity: Entity|string) => {
+    const entityRef = getEntityOnTeam(entity);
+    if (entityRef) {
+      const index = entitiesOnField.value.findIndex(e=>e===entityRef);
+      if (index !== -1) {
+        entitiesOnField.value.splice(index, 1);
+      }
+      entityRef.onField = false;
+    }
+  };
+
+  const getEntityOnTeam = (entity: Entity|string) => {
+    return typeof entity === "string" 
+      ? entitiesOnTeam.value.find(e => e.id === entity)
+      : entity;
+  }
+
+  const getEntityOnField = (entity: Entity|string) => {
+    return typeof entity === "string" 
+      ? entitiesOnField.value.find(e => e.id === entity)
+      : entity;
+  }
+
   return {
-    SMALL_ENTITY_CONFIG,
-    MEDIUM_ENTITY_CONFIG,
-    BIG_ENTITY_CONFIG,
-    entitiesOnFieldRef,
-    currentDragEntityRef,
-    isDraggingEntity,
+    entitiesOnTeam,
+    entitiesOnField,
+    entityBeingDrag,
+    sizeConfig,
     setEntityTeam,
-    removeEntityToTeam,
     addEntityToTeam,
-    setIsDraggingCreature,
-    getEntityRef,
-    addEntityOnField,
+    removeEntityToTeam,
+    setDraggingEntity,
     removeEntityFromField,
+    addEntityToField,
+    getEntityOnTeam,
+    getEntityOnField,
   };
 };

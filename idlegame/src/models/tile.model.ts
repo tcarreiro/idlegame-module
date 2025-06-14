@@ -1,14 +1,30 @@
-export type TileModel = {
-  position:Position;
-  blocked: boolean;
-  creatureId?: string | null;
-  spriteName: string;
-  frameId: Array<number>;
+import type { Entity } from "./entity.model";
+import { Position } from "./generics.model";
+
+export class Tile {
+  id:string="";
+  position:Position = new Position();
+  baseTile: TileRenderData = new TileRenderData();
+  tileCover: Array<TileRenderData> = [];
+  // objects: Array<TileRenderData> = []; // FUTURE
+  // effects: Array<TileRenderData> = []; // FURUTE
+  presentEntity: Entity|null = null; // ref to Entity
+
+  static fromJSON(json: unknown): Tile {
+    const raw = json as Partial<Tile>;
+    return Object.assign(new Tile(), raw);
+  }
+
+  isBlocked() {
+    return !this.baseTile.walkable || !!this.tileCover.filter((tc)=>!tc.walkable).length;
+  }
 }
 
-
-export type Position = {
-  x:number;
-  y:number;
-  z:number;
+export class TileRenderData {
+  id:string="";
+  spriteName:string="";
+  xOffset:number=0;
+  walkable:boolean=true;
+  frameId:Array<number>=[];
 }
+
