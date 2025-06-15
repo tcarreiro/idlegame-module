@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { useWorld } from '@/composable/world.composable';
-import type { Entity } from '@/models/entity.model';
+import { useWorld } from "@/composable/World.composable";
 import type { Tile } from '@/models/tile.model';
 import { computed, ref, type Ref } from 'vue';
 import MCreature from './MCreature.vue';
@@ -22,6 +21,7 @@ const props = withDefaults(defineProps<MTileProps>(), {
 const emit = defineEmits(["click"]);
 
 const isHovering:Ref<boolean> = ref(false);
+const isHoveringOnCreation:Ref<boolean> = ref(false);
 
 const entityRef = computed(()=> creatures.getEntityOnField(props.tile.presentEntity??""));
 const enablePlaceCreature = computed(()=>!props.tile.isBlocked() && creatures.entityBeingDrag.value);
@@ -32,7 +32,7 @@ const shouldIgnorePointerEvents = computed(() => !!creatures.entityBeingDrag.val
 const getCoverTileFrame = computed(() => (index:number) => {
 
   const frameNum = props.tile.tileCover[index].frameId[coverTileFrameIndex.value(index)];
-  
+
   const size = world.TILE_CONFIG.tileWorldSize;
   const atlasNumCols = world.TILE_CONFIG.atlasNumCols;
   const col = frameNum % atlasNumCols;
@@ -40,7 +40,7 @@ const getCoverTileFrame = computed(() => (index:number) => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("tiles",props.tile.tileCover[index].spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("tiles/coverTile/",props.tile.tileCover[index].spriteName, atlasNumCols, size, col, row),
   };
 });
 
@@ -54,7 +54,7 @@ const getBaseTileFrame = computed(() => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("tiles",props.tile.baseTile.spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("tiles/baseTile/",props.tile.baseTile.spriteName, atlasNumCols, size, col, row),
     backgroundBlendMode: `soft-light`,
   };
 });
@@ -145,6 +145,18 @@ const onDragEnd = (event: DragEvent) => {
   creatures.setDraggingEntity(null);
 }
 
+const onMouseEnter = (event: MouseEvent) => {
+  if (world.isCreatingWorld.value) {
+    isHovering.value = true;
+  }
+}
+
+const onMouseLeave = (event: MouseEvent) => {
+  if (world.isCreatingWorld.value) {
+    isHovering.value = false;
+  }
+}
+
 </script>
 
 <template>
@@ -164,6 +176,8 @@ const onDragEnd = (event: DragEvent) => {
     @drop="onDrop"
     @dragenter.self="onDragEnter"
     @dragleave.self="onDragLeave"
+    @mouseenter="onMouseEnter"
+    @mouseleave="onMouseLeave"
   >
     <div class="cover-tile" :class="{ 'no-pointer': shouldIgnorePointerEvents }" v-for="(ct, index) in props.tile.tileCover" :style="getCoverTileFrame(index)">
     </div>
@@ -180,6 +194,7 @@ const onDragEnd = (event: DragEvent) => {
   box-sizing: border-box;
 }
 
+.tile-wrapper.is-hovering,
 .tile-wrapper.is-dragging-available.is-hovering {
   border-color:#34ff44;
 }

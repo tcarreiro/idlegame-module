@@ -1,7 +1,8 @@
 import { computed, ref, type Ref } from "vue";
 import { useEntities } from "./entity.composable";
-import { Tile } from "@/models/tile.model";
-import type { Entity } from "@/models/entity.model";
+import { Tile, TileRenderData } from "@/models/tile.model";
+import { RenderData, type Entity } from "@/models/entity.model";
+import type { Position } from "@/models/generics.model";
 
 const entities = useEntities();
 
@@ -13,6 +14,10 @@ const isRunning: Ref<boolean> = ref(true);
 const worldTime: Ref<number> = ref(0);
 
 const worldTiles:Ref<Array<Tile>> = ref([]);
+
+// for  creation purpose
+const isCreatingWorld:Ref<boolean> = ref(false);
+const selectedTile:Ref<Tile|null> = ref(null);
 
 export const useWorld = () => {
   const TILE_CONFIG = {
@@ -58,13 +63,31 @@ export const useWorld = () => {
   };
 
   const setWorldTiles = (tiles: Array<Tile>) => {
-    tiles.forEach(tile=>{
+    worldTiles.value = [];
+    tiles.forEach((tile) => {
       worldTiles.value.push(Tile.fromJSON(tile));
     });
-  }
+  };
+
+  // for map creation purpose, only a few info are really important
+  const swapTile = (position: Position, newSpriteAtlas:string, newFrameId: number ) => {
+    const tile = worldTiles.value.find((t) => t.position === position);
+    if (!tile) return;
+    const type = newSpriteAtlas.split("/")[0];
+    if (type === "baseTile") {
+      tile.baseTile.frameId = [newFrameId];
+      tile.baseTile.spriteName = newSpriteAtlas.split("/")[1];
+    }
+    if (type === "coverTile") {
+      const renderData = new TileRenderData();
+      renderData.frameId = [newFrameId];
+      renderData.spriteName = newSpriteAtlas.split("/")[1];
+      tile.tileCover.push(renderData);
+    }
+  };
 
   const getTile = (tile: Tile|string) => {
-    return typeof tile === "string" 
+    return typeof tile === "string"
       ? worldTiles.value.find(t => t.id === tile)
       : tile;
   }
@@ -89,10 +112,10 @@ export const useWorld = () => {
     // if from field
     if (isEntityOnField) {
       const srcTileRef = getTileByCreatureId(entityRef); // src Tile
-      if (srcTileRef) { 
+      if (srcTileRef) {
         srcTileRef.presentEntity = null;
         if (tileRef.presentEntity) { // occupied tile
-          srcTileRef.presentEntity = tileRef.presentEntity; 
+          srcTileRef.presentEntity = tileRef.presentEntity;
         }
       }
     }
@@ -114,6 +137,8 @@ export const useWorld = () => {
     worldTime,
     localFrameTimer,
     isRunning,
+    isCreatingWorld,
+    selectedTile,
     TILE_CONFIG,
     updateWorld,
     stopFrameTimer,
@@ -124,5 +149,6 @@ export const useWorld = () => {
     getTileByCreatureId,
     addEntityOnTile,
     removeEntityFromTile,
+    swapTile,
   };
 };

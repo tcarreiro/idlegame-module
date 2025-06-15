@@ -22,7 +22,7 @@
     "idlegame": "file:",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "4.3.0",
-    "primevue": "^3.51.0",
+    "primevue": "^3.53.1",
     "sockjs-client": "^1.6.1",
     "url-search-params-polyfill": "8.2.5",
     "uuid": "^11.1.0",
