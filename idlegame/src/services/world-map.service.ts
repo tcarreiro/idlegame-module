@@ -4,3 +4,11 @@ import { getAxios } from "./services.config";
 export async function fetchWorldMap(): Promise<Array<Tile>> {
   return getAxios().get(`/world`)
 }
+
+// export async function fetchWorldMap(): Promise<Array<Tile>> {
+//   return getAxios().get(`/tiles/stage`, {
+//     params: {
+//       stageName:"teste"
+//     }
+//   });
+// }

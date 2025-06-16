@@ -23,8 +23,9 @@ export class Tile {
 export class TileRenderData {
   id:string="";
   spriteName:string="";
-  xOffset:number=0;
+  yOffset:number=0;
   walkable:boolean=true;
+  // movable?
   frameId:Array<number>=[];
 }
 

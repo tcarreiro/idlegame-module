@@ -21,7 +21,6 @@ const props = withDefaults(defineProps<MTileProps>(), {
 const emit = defineEmits(["click"]);
 
 const isHovering:Ref<boolean> = ref(false);
-const isHoveringOnCreation:Ref<boolean> = ref(false);
 
 const entityRef = computed(()=> creatures.getEntityOnField(props.tile.presentEntity??""));
 const enablePlaceCreature = computed(()=>!props.tile.isBlocked() && creatures.entityBeingDrag.value);
@@ -40,7 +39,7 @@ const getCoverTileFrame = computed(() => (index:number) => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("tiles/coverTile/",props.tile.tileCover[index].spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("coverTile/",props.tile.tileCover[index].spriteName, atlasNumCols, size, col, row),
   };
 });
 
@@ -54,7 +53,7 @@ const getBaseTileFrame = computed(() => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("tiles/baseTile/",props.tile.baseTile.spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("baseTile/",props.tile.baseTile.spriteName, atlasNumCols, size, col, row),
     backgroundBlendMode: `soft-light`,
   };
 });
@@ -179,7 +178,7 @@ const onMouseLeave = (event: MouseEvent) => {
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
   >
-    <div class="cover-tile" :class="{ 'no-pointer': shouldIgnorePointerEvents }" v-for="(ct, index) in props.tile.tileCover" :style="getCoverTileFrame(index)">
+    <div class="cover-tile border" :class="{ 'no-pointer': shouldIgnorePointerEvents }" v-for="(ct, index) in props.tile.tileCover" :style="getCoverTileFrame(index)">
     </div>
     <MCreature v-if="entityRef" :entity="entityRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
   </div>
@@ -189,14 +188,17 @@ const onMouseLeave = (event: MouseEvent) => {
 .tile-wrapper {
   position: relative;
   image-rendering: pixelated;
-  border: 1px solid transparent;
-  background-color: rgba(0,0,0,0)!important;
   box-sizing: border-box;
 }
 
+.border {
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.border:hover,
 .tile-wrapper.is-hovering,
 .tile-wrapper.is-dragging-available.is-hovering {
-  border-color:#34ff44;
+  box-shadow: inset 0 0 0 1px #34ff44;
 }
 
 .tile-wrapper.is-dragging-available {
@@ -209,10 +211,12 @@ const onMouseLeave = (event: MouseEvent) => {
 
 .cover-tile {
   position: absolute;
+  image-rendering: pixelated;
 }
 
 MCreature {
   position: absolute;
+  image-rendering: pixelated;
 }
 
 .no-pointer {

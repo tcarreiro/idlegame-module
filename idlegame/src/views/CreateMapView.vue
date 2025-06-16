@@ -94,7 +94,16 @@ onBeforeMount(() => {
           <MButton accent disabled class="w-full mb-5" style="height:30px" label="Carregar JSON"/>
         </div>
         <div>
-          <MButton class="w-full" style="height:30px" label="Gerar JSON"/>
+          <MButton class="w-full" style="height:30px" label="Gerar JSON" @click="console.log(world.worldTiles.value.map(t=>{return {
+            baseTile: {
+              spriteName:t.baseTile.spriteName,
+              frameId:t.baseTile.frameId
+            },
+            coverTile: t.tileCover.map(c=>{return {
+              spriteName: c.spriteName,
+              frameId: c.frameId
+            }})
+          }}))"/>
         </div>
       </div>
     </div>

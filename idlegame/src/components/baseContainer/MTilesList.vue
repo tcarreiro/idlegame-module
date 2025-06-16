@@ -2,8 +2,7 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import MBorder from '../basic/MBorder.vue';
 import MInput from '../forms/MInput.vue';
-import {  Tile, type TileRenderData } from '@/models/tile.model';
-import { useEntities } from '@/composable/entity.composable';
+import {  Tile } from '@/models/tile.model';
 import { useWorld } from '@/composable/World.composable';
 import { drawSize, getDrawFromAtlas } from '@/utils/renderer';
 
@@ -39,7 +38,7 @@ const handleClick = (tileId:number) => {
 // });
 
 const getImageSize = (src: string): Promise<{ width: number; height: number }> => {
-  const path = `/sprites/tiles/${src}.png`;
+  const path = `/sprites/${src}.png`;
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.width, height: img.height });
@@ -58,7 +57,7 @@ const getFrame = computed(() => (index:number) => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("tiles",`${spritePath.value}`, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas(type.value,sprite.value, atlasNumCols, size, col, row),
   };
 });
 
@@ -68,7 +67,7 @@ const getFrame = computed(() => (index:number) => {
   <MBorder inverted class="inventory-container">
     <MInput class="p-0 justify-content-center" style="width: 100%;height: 20px;"/>
     <div v-if="tiles" class="overflow-y-scroll scroll-custom slots-container" style="height: 462px;">
-      <div v-for="(tile, index) in tiles" class="p-3 pb-0 flex justify-content-between" :class="{ 'selected': selectedId===index }" @click="handleClick(index)">
+      <div v-for="(tile, index) in tiles" class="tile p-3 pb-0 flex justify-content-between" :class="{ 'selected': selectedId===index }" @click="handleClick(index)">
         <div class="option" :style="getFrame(index)">
         </div>
         {{index}}
@@ -84,13 +83,23 @@ const getFrame = computed(() => (index:number) => {
   justify-content: center;
 }
 
+.tile{
+  image-rendering: pixelated;
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
 .option {
   cursor: pointer;
   background-color: transparent;
 }
 
+.tile:hover {
+  box-shadow: inset 0 0 0 1px #34ff44;
+}
+
 .selected {
   background-color: rgba(50,50,255,0.6);
+  box-shadow: inset 0 0 0 1px #34ff44;
 }
 
 .slots-container {
