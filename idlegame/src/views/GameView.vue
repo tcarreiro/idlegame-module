@@ -3,15 +3,33 @@ import MInventory from '@/components/baseContainer/MInventory.vue';
 import MProfile from '@/components/baseContainer/MProfile.vue';
 import MWorldGrid from '@/components/baseContainer/MWorldGrid.vue';
 import MBorder from '@/components/basic/MBorder.vue';
-import MButton from '@/components/basic/MButton.vue';
+import MButton from '@/components/forms/MButton.vue';
 import { useEntities } from '@/composable/entity.composable';
 import { useGameSocket } from '@/composable/gameSocket.composable';
 import { Entity } from '@/models/entity.model';
+import type { WorldTileDto } from '@/models/tile.model';
+import { fetchWorldMap } from '@/services/world-map.service';
 import { EntitySize, EntityState, Orientation } from '@/utils/constants';
-import { computed, onBeforeMount, onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { onBeforeMount, onMounted, onUnmounted, ref, type Ref } from 'vue';
 
 const {connect, disconnect, world} = useGameSocket();
 const creatures = useEntities();
+const loadingMap:Ref<boolean> = ref(false);
+
+const getWorldData = async () => {
+  const tiles:Ref<Array<WorldTileDto>> = ref([]);
+  try {
+    loadingMap.value = true;
+    tiles.value = await fetchWorldMap();
+
+    world.setWorldTiles(tiles.value);
+
+  } catch (error) {
+    console.error(error);
+  } finally {
+    loadingMap.value = false;
+  }
+};
 
 const createTeam = () => {
   const bestiarySlots:Ref<Array<Entity>> = ref(
@@ -30,17 +48,19 @@ const createTeam = () => {
   bestiarySlots.value[1].name="minotaurguard";
   bestiarySlots.value[2].name="minotaur";
   bestiarySlots.value[3].name="deer";
+  bestiarySlots.value[3].renderData.orientation=Orientation.WEST;
   bestiarySlots.value[3].renderData.entitySizeConfig=EntitySize.BIG;
-  bestiarySlots.value[3].renderData.slotOffset={x:30, y:35, z:0};
+  bestiarySlots.value[3].renderData.slotOffset={x:25, y:40, z:0};
   bestiarySlots.value[4].name="dragonlord";
   bestiarySlots.value[4].renderData.entitySizeConfig=EntitySize.BIG;
-  bestiarySlots.value[4].renderData.slotOffset={x:0, y:20, z:0};
+  bestiarySlots.value[4].renderData.slotOffset={x:0, y:32, z:0};
 
   creatures.setEntityTeam(bestiarySlots.value);
 };
 
 onBeforeMount(() => {
-  createTeam();  
+  getWorldData();
+  createTeam();
 });
 
 onMounted(() => {

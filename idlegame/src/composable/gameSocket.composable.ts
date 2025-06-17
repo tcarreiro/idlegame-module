@@ -7,7 +7,7 @@ import {
   disconnectWebSocket,
 } from "@/services/websocket.service";
 import type { IMessage } from "@stomp/stompjs";
-import { useWorld } from "./world.composable";
+import { useWorld } from "./World.composable";
 
 const subscriptions: Ref<Array<string>> = ref([]);
 const isConnected = ref(false);

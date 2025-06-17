@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { useWorld } from '@/composable/world.composable';
-import type { Entity } from '@/models/entity.model';
-import type { Tile } from '@/models/tile.model';
+import { useWorld } from "@/composable/World.composable";
+import type { WorldTileDto } from '@/models/tile.model';
 import { computed, ref, type Ref } from 'vue';
 import MCreature from './MCreature.vue';
 import { useEntities } from '@/composable/entity.composable';
@@ -11,7 +10,7 @@ const world = useWorld();
 const creatures = useEntities();
 
 type MTileProps = {
-  tile: Tile,
+  tile: WorldTileDto,
   frameDuration?: number,
 };
 
@@ -32,29 +31,33 @@ const shouldIgnorePointerEvents = computed(() => !!creatures.entityBeingDrag.val
 const getCoverTileFrame = computed(() => (index:number) => {
 
   const frameNum = props.tile.tileCover[index].frameId[coverTileFrameIndex.value(index)];
-  
-  const size = world.TILE_CONFIG.tileWorldSize;
-  const atlasNumCols = world.TILE_CONFIG.atlasNumCols;
+
+  const sprite = props.tile.tileCover[index].sprite;
+
+  const size = world.TILE_CONFIG.tileWorldScale*sprite.frameSize;
+  const atlasNumCols = sprite.width/sprite.frameSize;
   const col = frameNum % atlasNumCols;
   const row = Math.floor(frameNum / atlasNumCols);
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("tiles",props.tile.tileCover[index].spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("coverTile/",sprite.name, atlasNumCols, size, col, row),
   };
 });
 
 const getBaseTileFrame = computed(() => {
   const frameNum = props.tile.baseTile.frameId[baseTileFrameIndex.value];
 
-  const size = world.TILE_CONFIG.tileWorldSize;
-  const atlasNumCols = world.TILE_CONFIG.atlasNumCols;
+  const sprite = props.tile.baseTile.sprite;
+
+  const size = world.TILE_CONFIG.tileWorldScale*sprite.frameSize;
+  const atlasNumCols = sprite.width/sprite.frameSize;
   const col = frameNum % atlasNumCols;
   const row = Math.floor(frameNum / atlasNumCols);
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("tiles",props.tile.baseTile.spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("baseTile/",sprite.name, atlasNumCols, size, col, row),
     backgroundBlendMode: `soft-light`,
   };
 });
@@ -75,20 +78,18 @@ const getCreatureFrame = () => {
   };
 };
 
-
 const onDragEnter = (event: DragEvent) => {
   if (!event.target) return;
   isHovering.value = true;
 };
 
-const onDragLeave = () => {
+const onDragLeave = (event: DragEvent) => {
   isHovering.value = false;
 };
 
 const onDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'move'; // ou 'copy', se for cópia
 };
-
 
 const onDrop = (event:DragEvent) => {
   isHovering.value = false;
@@ -145,6 +146,18 @@ const onDragEnd = (event: DragEvent) => {
   creatures.setDraggingEntity(null);
 }
 
+const onMouseEnter = (event: MouseEvent) => {
+  if (world.isCreatingWorld.value) {
+    isHovering.value = true;
+  }
+}
+
+const onMouseLeave = (event: MouseEvent) => {
+  if (world.isCreatingWorld.value) {
+    isHovering.value = false;
+  }
+}
+
 </script>
 
 <template>
@@ -155,8 +168,8 @@ const onDragEnd = (event: DragEvent) => {
       ${creatures.entityBeingDrag.value?'is-dragging':''}${!props.tile.isBlocked()?'-available':'-blocked'}
       ${props.tile.presentEntity?'occupied':''}
     `"
-    :style="getBaseTileFrame"
     @click="emit('click', props.tile.position)"
+    :style="getBaseTileFrame"
     :draggable="!!props.tile.presentEntity"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
@@ -164,9 +177,15 @@ const onDragEnd = (event: DragEvent) => {
     @drop="onDrop"
     @dragenter.self="onDragEnter"
     @dragleave.self="onDragLeave"
+    @mouseenter="onMouseEnter"
+    @mouseleave="onMouseLeave"
   >
-    <div class="cover-tile" :class="{ 'no-pointer': shouldIgnorePointerEvents }" v-for="(ct, index) in props.tile.tileCover" :style="getCoverTileFrame(index)">
-    </div>
+    <div
+      v-for="(ct, index) in props.tile.tileCover"
+      class="cover-tile border"
+      :class="{ 'no-pointer': shouldIgnorePointerEvents }"
+      :style="getCoverTileFrame(index)"
+    ></div>
     <MCreature v-if="entityRef" :entity="entityRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
   </div>
 </template>
@@ -175,13 +194,17 @@ const onDragEnd = (event: DragEvent) => {
 .tile-wrapper {
   position: relative;
   image-rendering: pixelated;
-  border: 1px solid transparent;
-  background-color: rgba(0,0,0,0)!important;
   box-sizing: border-box;
 }
 
+.border {
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.border:hover,
+.tile-wrapper.is-hovering,
 .tile-wrapper.is-dragging-available.is-hovering {
-  border-color:#34ff44;
+  box-shadow: inset 0 0 0 1px #34ff44;
 }
 
 .tile-wrapper.is-dragging-available {
@@ -194,10 +217,14 @@ const onDragEnd = (event: DragEvent) => {
 
 .cover-tile {
   position: absolute;
+  image-rendering: pixelated;
+  z-index: 10000;
 }
 
 MCreature {
   position: absolute;
+  image-rendering: pixelated;
+  z-index: 10001;
 }
 
 .no-pointer {

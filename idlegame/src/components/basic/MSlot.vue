@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { useEntities } from '@/composable/entity.composable';
-import { useWorld } from '@/composable/world.composable';
 import type { Entity } from '@/models/entity.model';
-import { EntitySize } from '@/utils/constants';
+import { useWorld } from "@/composable/World.composable";
 import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
 import { computed } from 'vue';
 
@@ -37,10 +36,11 @@ const getFrame = computed(() => {
   const col = props.entity.renderData.orientation;
   const row = props.entity.renderData.slotFrameId[frameIndex.value];
   const atlasNumCols = sizeConfig.atlasNumCols;
+  const scale = 1.2*sizeConfig.creatureAtlasSize/world.TILE_CONFIG.tileAtlasSize;
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creatures",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size*2, col, row, props.entity.renderData.slotOffset),
+    ...getDrawFromAtlas("creatures",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size*scale, col, row, props.entity.renderData.slotOffset),
   };
 });
 

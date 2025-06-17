@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useEntities } from '@/composable/entity.composable';
-import { useWorld } from '@/composable/world.composable';
+import { useWorld } from "@/composable/World.composable";
 import type { Entity } from '@/models/entity.model';
 import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
 import { computed } from 'vue';

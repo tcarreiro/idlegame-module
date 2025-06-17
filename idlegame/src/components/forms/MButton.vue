@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import MBorder from './MBorder.vue';
 
 type MButtonProps = {
   label?:string,
@@ -63,5 +62,20 @@ const emit = defineEmits(["click"]);
     border-right: 1px solid rgb(var(--color-blue-75));
     border-bottom: 1px solid rgb(var(--color-blue-75));
   }
+}
+
+button:disabled {
+  opacity: 0.9;
+  filter: grayscale(70%);
+  cursor: auto;
+}
+
+button:not(:disabled):hover {
+  filter: brightness(110%);
+}
+
+button:not(:disabled):active {
+  filter: brightness(90%);
+  transform: scale(0.98);
 }
 </style>

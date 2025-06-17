@@ -1,7 +1,11 @@
 import { computed, ref, type Ref } from "vue";
 import { useEntities } from "./entity.composable";
-import { Tile } from "@/models/tile.model";
-import type { Entity } from "@/models/entity.model";
+import { WorldTileDto, TileRenderDataDto } from "@/models/tile.model";
+import { RenderData, type Entity } from "@/models/entity.model";
+import type { Position } from "@/models/generics.model";
+import type { FrameDto } from "@/models/frame.model";
+import { SpriteGroup } from "@/utils/constants";
+import { getEnumValueByKey } from "@/utils/functions";
 
 const entities = useEntities();
 
@@ -12,7 +16,10 @@ const localFrameTimer: Ref<number> = ref(0);
 const isRunning: Ref<boolean> = ref(true);
 const worldTime: Ref<number> = ref(0);
 
-const worldTiles:Ref<Array<Tile>> = ref([]);
+const worldTiles:Ref<Array<WorldTileDto>> = ref([]);
+
+// for  creation purpose
+const isCreatingWorld:Ref<boolean> = ref(false);
 
 export const useWorld = () => {
   const TILE_CONFIG = {
@@ -57,14 +64,29 @@ export const useWorld = () => {
     isRunning.value = running;
   };
 
-  const setWorldTiles = (tiles: Array<Tile>) => {
-    tiles.forEach(tile=>{
-      worldTiles.value.push(Tile.fromJSON(tile));
+  const setWorldTiles = (tiles: Array<WorldTileDto>) => {
+    worldTiles.value = [];
+    tiles.forEach((tile) => {
+      worldTiles.value.push(WorldTileDto.fromJSON(tile));
     });
-  }
+  };
 
-  const getTile = (tile: Tile|string) => {
-    return typeof tile === "string" 
+  // for map creation purpose, only a few info are really important
+  const swapTile = (position: Position, newFrame:FrameDto ) => {
+    const tile = worldTiles.value.find((t) => t.position === position);
+    if (!tile) return;
+    const spriteGroup = getEnumValueByKey(SpriteGroup, newFrame.sprite.spriteGroup);
+    if (spriteGroup === SpriteGroup.BASE_TILE) {
+      tile.baseTile = new TileRenderDataDto(newFrame);
+    }
+    if (spriteGroup === SpriteGroup.COVER_TILE) {
+      const renderData = new TileRenderDataDto(newFrame);
+      tile.tileCover.push(renderData);
+    }
+  };
+
+  const getTile = (tile: WorldTileDto|number) => {
+    return typeof tile === "number"
       ? worldTiles.value.find(t => t.id === tile)
       : tile;
   }
@@ -78,7 +100,7 @@ export const useWorld = () => {
     return null;
   }
 
-  const addEntityOnTile = (entity:Entity|string, tile: Tile|string) => {
+  const addEntityOnTile = (entity: Entity | string, tile: WorldTileDto | number) => {
     const entityRef = entities.getEntityOnTeam(entity);
     const tileRef = getTile(tile);
     if (!entityRef || !tileRef) return;
@@ -89,10 +111,11 @@ export const useWorld = () => {
     // if from field
     if (isEntityOnField) {
       const srcTileRef = getTileByCreatureId(entityRef); // src Tile
-      if (srcTileRef) { 
+      if (srcTileRef) {
         srcTileRef.presentEntity = null;
-        if (tileRef.presentEntity) { // occupied tile
-          srcTileRef.presentEntity = tileRef.presentEntity; 
+        if (tileRef.presentEntity) {
+          // occupied tile
+          srcTileRef.presentEntity = tileRef.presentEntity;
         }
       }
     }
@@ -100,7 +123,7 @@ export const useWorld = () => {
     tileRef.presentEntity = entityRef;
   };
 
-  const removeEntityFromTile = (entity:Entity|string, tile: Tile|string) => {
+  const removeEntityFromTile = (entity: Entity | string, tile: WorldTileDto | number) => {
     const entityRef = entities.getEntityOnTeam(entity);
     const tileRef = getTile(tile);
     if (!entityRef || !tileRef) return;
@@ -114,6 +137,7 @@ export const useWorld = () => {
     worldTime,
     localFrameTimer,
     isRunning,
+    isCreatingWorld,
     TILE_CONFIG,
     updateWorld,
     stopFrameTimer,
@@ -124,5 +148,6 @@ export const useWorld = () => {
     getTileByCreatureId,
     addEntityOnTile,
     removeEntityFromTile,
+    swapTile,
   };
 };

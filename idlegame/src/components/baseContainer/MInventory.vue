@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Entity } from '@/models/entity.model';
-import MBorder from '../basic/MBorder.vue';
-import MInput from '../basic/MInput.vue';
-import MSlot from '../basic/MSlot.vue';
 import { onMounted } from 'vue';
+import MBorder from '../basic/MBorder.vue';
+import MInput from '../forms/MInput.vue';
+import MSlot from '../basic/MSlot.vue';
 
 const slots = defineModel<Array<Entity>>({required:true});
 

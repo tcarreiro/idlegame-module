@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import MBorder from './MBorder.vue';
 
 type MInputProps = {
   placeholder?:string,
