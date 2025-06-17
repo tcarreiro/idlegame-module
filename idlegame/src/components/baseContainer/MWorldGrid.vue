@@ -2,7 +2,7 @@
 import { useWorld } from "@/composable/World.composable";
 import MTile from '../basic/MTile.vue';
 import { computed, onBeforeMount, onMounted, ref, type Ref } from 'vue';
-import { Tile } from '@/models/tile.model';
+import { WorldTileDto } from '@/models/tile.model';
 import { fetchWorldMap } from '@/services/world-map.service';
 import MBorder from '../basic/MBorder.vue';
 
@@ -26,7 +26,7 @@ onMounted(()=>{
 <template>
   <MBorder>
     <div :style="worldGridStyle">
-      <MTile v-for="(tile, index) in world.worldTiles.value" :key="index" :tile="tile" @click="(tile:Tile)=>console.log(tile)" />
+      <MTile v-for="(tile, index) in world.worldTiles.value" :key="index" :tile="tile" @click="(tile:WorldTileDto)=>console.log(tile)" />
     </div>
   </MBorder>
 </template>

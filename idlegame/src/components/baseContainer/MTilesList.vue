@@ -1,63 +1,48 @@
 <script setup lang="ts">
-import { computed, ref, watch, type Ref } from 'vue';
+import { computed } from 'vue';
 import MBorder from '../basic/MBorder.vue';
 import MInput from '../forms/MInput.vue';
-import {  Tile } from '@/models/tile.model';
 import { useWorld } from '@/composable/World.composable';
-import { drawSize, getDrawFromAtlas } from '@/utils/renderer';
+import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
+import type { FrameDto } from '@/models/frame.model';
+import { getEnumValueByKey } from '@/utils/functions';
+import { SpriteGroup } from '@/utils/constants';
 
 const world = useWorld();
 
-const selectedId = defineModel<number>({required:true});
-const type = defineModel<string>("type",{required:true});
-const sprite = defineModel<string>("sprite",{required:true});
-const spritePath = computed(()=>`${type.value}/${sprite.value}`);
-const tiles = ref();
-
-
-watch(spritePath, async (newVal) => {
-  try {
-    const frameSize = world.TILE_CONFIG.tileAtlasSize;
-    const response = await getImageSize(newVal);
-    tiles.value = response.width/frameSize*response.height/frameSize;
-  } catch (error) {
-    tiles.value = null;
-  }
-});
-
-const handleClick = (tileId:number) => {
-  const newTile = new Tile();
-  newTile.baseTile.frameId = [tileId];
-  newTile.baseTile.spriteName = spritePath.value;
-  world.selectedTile.value = newTile;
-  selectedId.value = tileId;
+type MTilesListProps = {
+  frameDuration?: number,
 };
 
-// const frameIndex = computed(() => {
-//   return getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.entity.renderData.slotFrameId.length);
-// });
+const props = withDefaults(defineProps<MTilesListProps>(), {
+  frameDuration: 200, // ms
+});
 
-const getImageSize = (src: string): Promise<{ width: number; height: number }> => {
-  const path = `/sprites/${src}.png`;
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve({ width: img.width, height: img.height });
-    img.onerror = reject;
-    img.src = path;
-  });
-}
+const selectedFrame = defineModel<FrameDto|null>({required:true});
+const frames = defineModel<Array<FrameDto>>("frames",{required:true});
+const frameIndex = computed(() => (index:number) => getRendererFrameId(world.localFrameTimer.value, props.frameDuration, frames.value[index].frameIndex.length));
+
+const handleClick = (frame:FrameDto) => {
+  // const newTile = new WorldTileDto();
+  // newTile.
+  // newTile.baseTile.frameId = [tileId];
+  // newTile.baseTile.sprite.name = spritePath.value;
+  // world.selectedTile.value = newTile;
+  selectedFrame.value = frame;
+};
 
 const getFrame = computed(() => (index:number) => {
-  const sizeConfig = world.TILE_CONFIG;
-  let size = sizeConfig.tileWorldSize;
-
-  const atlasNumCols = sizeConfig.atlasNumCols;
-  const col = index % atlasNumCols;
-  const row = Math.floor(index / atlasNumCols);
+  const frame = frames.value[index];
+  const sprite = frame.sprite;
+  const size = world.TILE_CONFIG.tileWorldScale*sprite.frameSize;
+  const atlasNumCols = sprite.width/sprite.frameSize;
+  const frameNum = frame.frameIndex[frameIndex.value(index)];
+  const col = frameNum % atlasNumCols;
+  const row = Math.floor(frameNum / atlasNumCols);
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas(type.value,sprite.value, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas(getEnumValueByKey(SpriteGroup, sprite.spriteGroup)!.toString(),sprite.name, atlasNumCols, size, col, row),
   };
 });
 
@@ -66,10 +51,9 @@ const getFrame = computed(() => (index:number) => {
 <template>
   <MBorder inverted class="inventory-container">
     <MInput class="p-0 justify-content-center" style="width: 100%;height: 20px;"/>
-    <div v-if="tiles" class="overflow-y-scroll scroll-custom slots-container" style="height: 462px;">
-      <div v-for="(tile, index) in tiles" class="tile p-3 pb-0 flex justify-content-between" :class="{ 'selected': selectedId===index }" @click="handleClick(index)">
-        <div class="option" :style="getFrame(index)">
-        </div>
+    <div v-if="frames" class="overflow-y-scroll scroll-custom slots-container" style="height: 462px;">
+      <div v-for="(frame, index) in frames" class="tile p-3 pb-0 flex justify-content-between" :class="{ 'selected': selectedFrame===frame }" @click="handleClick(frame)">
+        <div class="option" :style="getFrame(index)"></div>
         {{index}}
       </div>
     </div>
@@ -106,7 +90,7 @@ const getFrame = computed(() => (index:number) => {
   align-items: start;
   align-content: start;
   background-repeat: no-repeat;
-  background-position: left; /* centraliza a imagem */
+  background-position: left;
 }
 
 </style>

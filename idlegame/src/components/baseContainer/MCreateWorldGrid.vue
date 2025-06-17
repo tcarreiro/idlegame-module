@@ -2,12 +2,13 @@
 import { useWorld } from "@/composable/World.composable";
 import MTile from '../basic/MTile.vue';
 import { computed, onMounted } from 'vue';
-import { Tile } from '@/models/tile.model';
+import { WorldTileDto } from '@/models/tile.model';
 import MBorder from '../basic/MBorder.vue';
+import type { FrameDto } from "@/models/frame.model";
 
 const world = useWorld();
 
-const selectedId = defineModel<number>({required:true});
+const selectedFrame = defineModel<FrameDto|null>({required:true});
 const numCols = computed(() => Math.max(...world.worldTiles.value.map(t => t.position.x)) + 1);
 const numRows = computed(() => Math.max(...world.worldTiles.value.map(t => t.position.y)) + 1);
 const worldGridStyle = computed(() => ({
@@ -20,9 +21,9 @@ onMounted(()=>{
   world.isCreatingWorld.value = true;
 });
 
-const handleAddTile = (newtile:Tile) => {
-  if (selectedId.value !== -1 && world.selectedTile.value) {
-    world.swapTile(newtile.position, world.selectedTile.value.baseTile.spriteName, world.selectedTile.value.baseTile.frameId[0])
+const handleAddTile = (newtile:WorldTileDto) => {
+  if (selectedFrame.value) {
+    world.swapTile(newtile.position, selectedFrame.value);
   }
 }
 

@@ -6,6 +6,13 @@ export const frameSize = 32
 
 export const dropdownDefaultOption:MDropDownItem = { label: 'Selecione', value: "" };
 
+export enum SpriteGroup {
+  BASE_TILE = "baseTile",
+  COVER_TILE = "coverTile",
+  CREATURE = "creature",
+  PROP = "prop",
+}
+
 export enum EntityState {
   IDLE = "idle",
   MOVING = "moving",

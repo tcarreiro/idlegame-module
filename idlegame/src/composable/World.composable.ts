@@ -1,8 +1,11 @@
 import { computed, ref, type Ref } from "vue";
 import { useEntities } from "./entity.composable";
-import { Tile, TileRenderData } from "@/models/tile.model";
+import { WorldTileDto, TileRenderDataDto } from "@/models/tile.model";
 import { RenderData, type Entity } from "@/models/entity.model";
 import type { Position } from "@/models/generics.model";
+import type { FrameDto } from "@/models/frame.model";
+import { SpriteGroup } from "@/utils/constants";
+import { getEnumValueByKey } from "@/utils/functions";
 
 const entities = useEntities();
 
@@ -13,11 +16,10 @@ const localFrameTimer: Ref<number> = ref(0);
 const isRunning: Ref<boolean> = ref(true);
 const worldTime: Ref<number> = ref(0);
 
-const worldTiles:Ref<Array<Tile>> = ref([]);
+const worldTiles:Ref<Array<WorldTileDto>> = ref([]);
 
 // for  creation purpose
 const isCreatingWorld:Ref<boolean> = ref(false);
-const selectedTile:Ref<Tile|null> = ref(null);
 
 export const useWorld = () => {
   const TILE_CONFIG = {
@@ -62,32 +64,29 @@ export const useWorld = () => {
     isRunning.value = running;
   };
 
-  const setWorldTiles = (tiles: Array<Tile>) => {
+  const setWorldTiles = (tiles: Array<WorldTileDto>) => {
     worldTiles.value = [];
     tiles.forEach((tile) => {
-      worldTiles.value.push(Tile.fromJSON(tile));
+      worldTiles.value.push(WorldTileDto.fromJSON(tile));
     });
   };
 
   // for map creation purpose, only a few info are really important
-  const swapTile = (position: Position, newSpriteAtlas:string, newFrameId: number ) => {
+  const swapTile = (position: Position, newFrame:FrameDto ) => {
     const tile = worldTiles.value.find((t) => t.position === position);
     if (!tile) return;
-    const type = newSpriteAtlas.split("/")[0];
-    if (type === "baseTile") {
-      tile.baseTile.frameId = [newFrameId];
-      tile.baseTile.spriteName = newSpriteAtlas.split("/")[1];
+    const spriteGroup = getEnumValueByKey(SpriteGroup, newFrame.sprite.spriteGroup);
+    if (spriteGroup === SpriteGroup.BASE_TILE) {
+      tile.baseTile = new TileRenderDataDto(newFrame);
     }
-    if (type === "coverTile") {
-      const renderData = new TileRenderData();
-      renderData.frameId = [newFrameId];
-      renderData.spriteName = newSpriteAtlas.split("/")[1];
+    if (spriteGroup === SpriteGroup.COVER_TILE) {
+      const renderData = new TileRenderDataDto(newFrame);
       tile.tileCover.push(renderData);
     }
   };
 
-  const getTile = (tile: Tile|string) => {
-    return typeof tile === "string"
+  const getTile = (tile: WorldTileDto|number) => {
+    return typeof tile === "number"
       ? worldTiles.value.find(t => t.id === tile)
       : tile;
   }
@@ -101,7 +100,7 @@ export const useWorld = () => {
     return null;
   }
 
-  const addEntityOnTile = (entity:Entity|string, tile: Tile|string) => {
+  const addEntityOnTile = (entity: Entity | string, tile: WorldTileDto | number) => {
     const entityRef = entities.getEntityOnTeam(entity);
     const tileRef = getTile(tile);
     if (!entityRef || !tileRef) return;
@@ -114,7 +113,8 @@ export const useWorld = () => {
       const srcTileRef = getTileByCreatureId(entityRef); // src Tile
       if (srcTileRef) {
         srcTileRef.presentEntity = null;
-        if (tileRef.presentEntity) { // occupied tile
+        if (tileRef.presentEntity) {
+          // occupied tile
           srcTileRef.presentEntity = tileRef.presentEntity;
         }
       }
@@ -123,7 +123,7 @@ export const useWorld = () => {
     tileRef.presentEntity = entityRef;
   };
 
-  const removeEntityFromTile = (entity:Entity|string, tile: Tile|string) => {
+  const removeEntityFromTile = (entity: Entity | string, tile: WorldTileDto | number) => {
     const entityRef = entities.getEntityOnTeam(entity);
     const tileRef = getTile(tile);
     if (!entityRef || !tileRef) return;
@@ -138,7 +138,6 @@ export const useWorld = () => {
     localFrameTimer,
     isRunning,
     isCreatingWorld,
-    selectedTile,
     TILE_CONFIG,
     updateWorld,
     stopFrameTimer,

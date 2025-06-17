@@ -1,18 +1,21 @@
 import type { Entity } from "./entity.model";
+import type { FrameDto } from "./frame.model";
 import { Position } from "./generics.model";
+import { SpriteDto } from "./sprite.model";
 
-export class Tile {
-  id:string="";
+export class WorldTileDto {
+  id:number=0;
   position:Position = new Position();
-  baseTile: TileRenderData = new TileRenderData();
-  tileCover: Array<TileRenderData> = [];
+  baseTile: TileRenderDataDto = new TileRenderDataDto();
+  tileCover: Array<TileRenderDataDto> = [];
+
   // objects: Array<TileRenderData> = []; // FUTURE
   // effects: Array<TileRenderData> = []; // FURUTE
   presentEntity: Entity|null = null; // ref to Entity
 
-  static fromJSON(json: unknown): Tile {
-    const raw = json as Partial<Tile>;
-    return Object.assign(new Tile(), raw);
+  static fromJSON(json: unknown): WorldTileDto {
+    const raw = json as Partial<WorldTileDto>;
+    return Object.assign(new WorldTileDto(), raw);
   }
 
   isBlocked() {
@@ -20,12 +23,23 @@ export class Tile {
   }
 }
 
-export class TileRenderData {
-  id:string="";
-  spriteName:string="";
-  yOffset:number=0;
-  walkable:boolean=true;
-  // movable?
-  frameId:Array<number>=[];
+export class TileRenderDataDto {
+  id: number = 0;
+  sprite: SpriteDto = new SpriteDto();
+  yOffset: number = 0;
+  walkable: boolean = true;
+  movable: boolean = false;
+  frameId: Array<number> = [];
+
+  constructor(frame?: FrameDto) {
+    if (frame) {
+      this.id = frame.id;
+      this.sprite = frame.sprite;
+      this.yOffset = frame.yOffset;
+      this.walkable = frame.walkable;
+      this.movable = frame.movable;
+      this.frameId = frame.frameIndex;
+    }
+  }
 }
 

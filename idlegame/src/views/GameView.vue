@@ -7,7 +7,7 @@ import MButton from '@/components/forms/MButton.vue';
 import { useEntities } from '@/composable/entity.composable';
 import { useGameSocket } from '@/composable/gameSocket.composable';
 import { Entity } from '@/models/entity.model';
-import type { Tile } from '@/models/tile.model';
+import type { WorldTileDto } from '@/models/tile.model';
 import { fetchWorldMap } from '@/services/world-map.service';
 import { EntitySize, EntityState, Orientation } from '@/utils/constants';
 import { onBeforeMount, onMounted, onUnmounted, ref, type Ref } from 'vue';
@@ -17,7 +17,7 @@ const creatures = useEntities();
 const loadingMap:Ref<boolean> = ref(false);
 
 const getWorldData = async () => {
-  const tiles:Ref<Array<Tile>> = ref([]);
+  const tiles:Ref<Array<WorldTileDto>> = ref([]);
   try {
     loadingMap.value = true;
     tiles.value = await fetchWorldMap();

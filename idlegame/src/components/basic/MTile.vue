@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useWorld } from "@/composable/World.composable";
-import type { Tile } from '@/models/tile.model';
+import type { WorldTileDto } from '@/models/tile.model';
 import { computed, ref, type Ref } from 'vue';
 import MCreature from './MCreature.vue';
 import { useEntities } from '@/composable/entity.composable';
@@ -10,7 +10,7 @@ const world = useWorld();
 const creatures = useEntities();
 
 type MTileProps = {
-  tile: Tile,
+  tile: WorldTileDto,
   frameDuration?: number,
 };
 
@@ -32,28 +32,32 @@ const getCoverTileFrame = computed(() => (index:number) => {
 
   const frameNum = props.tile.tileCover[index].frameId[coverTileFrameIndex.value(index)];
 
-  const size = world.TILE_CONFIG.tileWorldSize;
-  const atlasNumCols = world.TILE_CONFIG.atlasNumCols;
+  const sprite = props.tile.tileCover[index].sprite;
+
+  const size = world.TILE_CONFIG.tileWorldScale*sprite.frameSize;
+  const atlasNumCols = sprite.width/sprite.frameSize;
   const col = frameNum % atlasNumCols;
   const row = Math.floor(frameNum / atlasNumCols);
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("coverTile/",props.tile.tileCover[index].spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("coverTile/",sprite.name, atlasNumCols, size, col, row),
   };
 });
 
 const getBaseTileFrame = computed(() => {
   const frameNum = props.tile.baseTile.frameId[baseTileFrameIndex.value];
 
-  const size = world.TILE_CONFIG.tileWorldSize;
-  const atlasNumCols = world.TILE_CONFIG.atlasNumCols;
+  const sprite = props.tile.baseTile.sprite;
+
+  const size = world.TILE_CONFIG.tileWorldScale*sprite.frameSize;
+  const atlasNumCols = sprite.width/sprite.frameSize;
   const col = frameNum % atlasNumCols;
   const row = Math.floor(frameNum / atlasNumCols);
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("baseTile/",props.tile.baseTile.spriteName, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("baseTile/",sprite.name, atlasNumCols, size, col, row),
     backgroundBlendMode: `soft-light`,
   };
 });
@@ -74,20 +78,18 @@ const getCreatureFrame = () => {
   };
 };
 
-
 const onDragEnter = (event: DragEvent) => {
   if (!event.target) return;
   isHovering.value = true;
 };
 
-const onDragLeave = () => {
+const onDragLeave = (event: DragEvent) => {
   isHovering.value = false;
 };
 
 const onDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'move'; // ou 'copy', se for cópia
 };
-
 
 const onDrop = (event:DragEvent) => {
   isHovering.value = false;
@@ -166,8 +168,8 @@ const onMouseLeave = (event: MouseEvent) => {
       ${creatures.entityBeingDrag.value?'is-dragging':''}${!props.tile.isBlocked()?'-available':'-blocked'}
       ${props.tile.presentEntity?'occupied':''}
     `"
-    :style="getBaseTileFrame"
     @click="emit('click', props.tile.position)"
+    :style="getBaseTileFrame"
     :draggable="!!props.tile.presentEntity"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
@@ -178,8 +180,12 @@ const onMouseLeave = (event: MouseEvent) => {
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
   >
-    <div class="cover-tile border" :class="{ 'no-pointer': shouldIgnorePointerEvents }" v-for="(ct, index) in props.tile.tileCover" :style="getCoverTileFrame(index)">
-    </div>
+    <div
+      v-for="(ct, index) in props.tile.tileCover"
+      class="cover-tile border"
+      :class="{ 'no-pointer': shouldIgnorePointerEvents }"
+      :style="getCoverTileFrame(index)"
+    ></div>
     <MCreature v-if="entityRef" :entity="entityRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
   </div>
 </template>
@@ -212,11 +218,13 @@ const onMouseLeave = (event: MouseEvent) => {
 .cover-tile {
   position: absolute;
   image-rendering: pixelated;
+  z-index: 10000;
 }
 
 MCreature {
   position: absolute;
   image-rendering: pixelated;
+  z-index: 10001;
 }
 
 .no-pointer {

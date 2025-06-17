@@ -3,7 +3,7 @@ import Dropdown from 'primevue/dropdown';
 
 export type MDropDownItem = {
   label: string;
-  value: number|string|boolean;
+  value: number|string|boolean|undefined;
 }
 
 export type MDropDownGroup = {
@@ -26,6 +26,8 @@ const props = withDefaults(defineProps<MDropDownProps>(),{
 
 const selection = defineModel<MDropDownItem|null>();
 
+const emit = defineEmits(["change"]);
+
 </script>
 
 <template>
@@ -37,6 +39,7 @@ const selection = defineModel<MDropDownItem|null>();
     :placeholder="props.placeholder"
     :optionGroupChildren="`${props.type==='group'?'items':''}`"
     :optionGroupLabel="`${props.type==='group'?'label':''}`"
+    @change="emit('change', selection)"
   >
     <template #optiongroup="slotProps">
       <div class="flex align-items-center">
