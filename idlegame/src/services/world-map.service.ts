@@ -1,23 +1,25 @@
-import type { WorldTileDto } from "@/models/tile.model";
+import type { TileDto, WorldTileDto } from "@/models/tile.model";
 import { getAxios } from "./services.config";
 import type { FrameDto } from "@/models/frame.model";
+import type { StageDto } from "@/models/stage.model";
 
-export async function fetchWorldMap(): Promise<Array<WorldTileDto>> {
-  return getAxios().get(`/world`)
-}
+export const fetchWorldMap = async (stageName?: string): Promise<Array<WorldTileDto>> => {
+  const finalStageName = stageName && stageName.trim() !== "" ? stageName : "Base";
+  return getAxios().get(`/tiles/stage`, {
+    params: {
+      stageName: finalStageName,
+    },
+  });
+};
 
-// export async function fetchWorldMap(): Promise<Array<Tile>> {
-//   return getAxios().get(`/tiles/stage`, {
-//     params: {
-//       stageName:"teste"
-//     }
-//   });
-// }
+export const fetchAvailableStages = async (): Promise<Array<string>> => {
+  return getAxios().get(`/tiles/available-stages`);
+};
 
-export async function fetchFramesByGroupAndName(
+export const fetchFramesByGroupAndName = async (
   tileTypeName: string,
   spriteSetName: string,
-): Promise<Array<FrameDto>> {
+): Promise<Array<FrameDto>> => {
   return getAxios().get(`/tiles/frame`, {
     params: {
       spriteGroup: tileTypeName,
@@ -25,3 +27,9 @@ export async function fetchFramesByGroupAndName(
     },
   });
 }
+
+export const saveStageService = async (stageName:string, tiles: Array<TileDto>): Promise<StageDto> => {
+  return getAxios().post(`/tiles/stage`, tiles, {
+    params: { stageName },
+  });
+};

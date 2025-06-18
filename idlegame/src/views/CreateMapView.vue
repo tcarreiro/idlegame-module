@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import MCreateWorldGrid from '@/components/baseContainer/MCreateWorldGrid.vue';
 import MTilesList from '@/components/baseContainer/MTilesList.vue';
+import MWorldGrid from '@/components/baseContainer/MWorldGrid.vue';
 import MBorder from '@/components/basic/MBorder.vue';
+import MModal from '@/components/basic/MModal.vue';
+import MStageList from '@/components/CreateMap/MStageList.vue';
 import MButton from '@/components/forms/MButton.vue';
 import MDropDown, { type MDropDownGroup, type MDropDownItem } from '@/components/forms/MDropDown.vue';
 import { useGameSocket } from '@/composable/gameSocket.composable';
 import { useWorld } from '@/composable/World.composable';
 import { FrameDto } from '@/models/frame.model';
-import type { WorldTileDto } from '@/models/tile.model';
-import { fetchFramesByGroupAndName, fetchWorldMap } from '@/services/world-map.service';
+import { TileDto, type WorldTileDto } from '@/models/tile.model';
+import { fetchAvailableStages, fetchFramesByGroupAndName, fetchWorldMap, saveStageService } from '@/services/world-map.service';
 import { dropdownDefaultOption, SpriteGroup } from '@/utils/constants';
 import { getEnumKeyByValue, getEnumValueByKey } from '@/utils/functions';
 import { computed, onBeforeMount, onMounted, onUnmounted, ref, type Ref } from 'vue';
@@ -23,25 +26,11 @@ const spriteSet:Ref<MDropDownItem> = ref(dropdownDefaultOption);
 const spriteSetName = computed(()=>spriteSet.value?.value?.toString()??"");
 const loadingMap:Ref<boolean> = ref(false);
 const loadingFrames:Ref<boolean> = ref(false);
+const savingStage:Ref<boolean> = ref(false);
+const stageName:Ref<string> = ref("");
 const selectedFrame:Ref<FrameDto|null> = ref(null);
 
 const frames:Ref<Array<FrameDto>> = ref([]);
-
-const getWorldData = async () => {
-  const tiles:Ref<Array<WorldTileDto>> = ref([]);
-
-  try {
-    loadingMap.value = true;
-    tiles.value = await fetchWorldMap();
-
-    world.setWorldTiles(tiles.value);
-
-  } catch (error) {
-    console.error(error);
-  } finally {
-    loadingMap.value = false;
-  }
-};
 
 const getAvailableFrames = async () => {
   try {
@@ -69,7 +58,12 @@ const getCoverTiles = () => {
       category: 'baseTile',
       items: [
         { label: 'caveDirt1', value: "caveDirt1" },
+        { label: 'caveDirt2', value: "caveDirt2" },
+        { label: 'caveDirt3', value: "caveDirt3" },
+        { label: 'caveDirt4', value: "caveDirt4" },
+        { label: 'caveDirt5', value: "caveDirt5" },
         { label: 'waterDeep1', value: "waterDeep1" },
+        { label: 'waterDeep2', value: "waterDeep2" },
       ]
     },
     {
@@ -77,19 +71,61 @@ const getCoverTiles = () => {
       category: 'coverTile',
       items: [
         { label: 'caveCeiling1', value: "caveCeiling1" },
-        { label: 'caveCeilingCorners', value: "caveCeilingCorners" },
+        { label: 'caveCeilingCorners1', value: "caveCeilingCorners1" },
+        { label: 'waterStraight1', value: "waterStraight1" },
+        { label: 'waterCorners1', value: "waterCorners1" },
       ]
     },
   ];
 };
 
+const saveStage = async () => {
+  if (!stageName.value) return;
+  try {
+    savingStage.value = true;
+    const tileDtoList:Array<TileDto> = [];
+    world.worldTiles.value.forEach((wt) => {
+      tileDtoList.push(new TileDto(wt))
+    });
+    await saveStageService(stageName.value, tileDtoList);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    savingStage.value = false;
+  }
+};
+
+const fetchStage = async () => {
+  try {
+    loadingMap.value = true;
+    const tiles = await fetchWorldMap(choosenStage.value);
+    world.setWorldTiles(tiles);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    loadingMap.value = false;
+  }
+};
+
+const fetchAvailableMaps = async () => {
+  try {
+    loadingStageOptions.value = true;
+    availableStages.value = await fetchAvailableStages();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    loadingStageOptions.value = false;
+  }
+};
+
 onBeforeMount(() => {
-  getWorldData();
+  fetchStage();
   getTiles();
   getCoverTiles();
 });
 
 onMounted(()=>{
+  world.isCreatingWorld.value = true;
   connect();
 });
 
@@ -105,13 +141,32 @@ const handleSelection = () => {
   }
 }
 
+const showModal: Ref<boolean> = ref(false);
+const availableStages: Ref<Array<string>> = ref([]);
+const choosenStage: Ref<string> = ref("");
+const loadingStageOptions:Ref<boolean> = ref(false);
+
+const handleModal = () => {
+  showModal.value=true;
+  fetchAvailableMaps();
+};
+
 </script>
 
 <template>
+
+  <MModal needsAction v-model:show="showModal" title="Carregar mapa" @accept="fetchStage()">
+    <template #content>
+      <div class="modal-content-container">
+        <MStageList v-model="choosenStage" v-model:stageList="availableStages" />
+      </div>
+    </template>
+  </MModal>
+
   <div class="main-content cross-container">
     <div v-if="!loadingMap" class="content-wrapper">
       <MBorder class="noise-container mr-5" thickness="thick">
-        <MCreateWorldGrid v-model="selectedFrame" class="m-3"/>
+        <MWorldGrid v-model="selectedFrame" class="m-3"/>
       </MBorder>
       <div class="flex-column" style="width: 184px;">
         <MBorder class="noise-container mb-5" inverted>
@@ -132,29 +187,21 @@ const handleSelection = () => {
             />
         </MBorder>
         <MBorder class="noise-container mb-5 flex-grow-1" thickness="thick">
-          <MTilesList v-model="selectedFrame" v-model:frames="frames"/>
+          <MTilesList v-model="selectedFrame" v-model:frames="frames" v-model:stageName="stageName"/>
         </MBorder>
         <div>
-          <MButton accent disabled class="w-full mb-5" style="height:30px" label="Carregar JSON"/>
+          <MButton accent class="w-full mb-5" style="height:30px" label="Carregar mapa" @click="handleModal()"/>
+          <!-- <MButton accent class="w-full mb-5" style="height:30px" label="Carregar JSON" @click="fetchStage()"/> -->
         </div>
         <div>
-          <MButton class="w-full" style="height:30px" label="Gerar JSON" @click="console.log(world.worldTiles.value.map(t=>{return {
-            baseTile: {
-              spriteName:t.baseTile.sprite,
-              frameId:t.baseTile.frameId
-            },
-            coverTile: t.tileCover.map(c=>{return {
-              spriteName: c.sprite,
-              frameId: c.frameId
-            }})
-          }}))"/>
+          <MButton class="w-full" style="height:30px" label="Salvar mapa" @click="saveStage()"/>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .main-content {
   background-color: rgba(0,0,0,0.8);
   height: 100vh;
@@ -168,6 +215,12 @@ const handleSelection = () => {
 .content-wrapper {
   display: flex;
   margin-top: 2rem;
+}
+
+.modal-content-container {
+  display: flex;
+  justify-content: space-between;
+
 }
 
 @media (max-width: 1200px) {

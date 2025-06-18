@@ -2,16 +2,17 @@ import type { Entity } from "./entity.model";
 import type { FrameDto } from "./frame.model";
 import { Position } from "./generics.model";
 import { SpriteDto } from "./sprite.model";
+import { StageDto } from "./stage.model";
 
 export class WorldTileDto {
-  id:number=0;
-  position:Position = new Position();
+  id: number = 0;
+  position: Position = new Position();
   baseTile: TileRenderDataDto = new TileRenderDataDto();
   tileCover: Array<TileRenderDataDto> = [];
 
   // objects: Array<TileRenderData> = []; // FUTURE
-  // effects: Array<TileRenderData> = []; // FURUTE
-  presentEntity: Entity|null = null; // ref to Entity
+  // effects: Array<TileRenderData> = []; // FUTURE
+  presentEntity: Entity | null = null; // ref to Entity
 
   static fromJSON(json: unknown): WorldTileDto {
     const raw = json as Partial<WorldTileDto>;
@@ -19,8 +20,9 @@ export class WorldTileDto {
   }
 
   isBlocked() {
-    return !this.baseTile.walkable || !!this.tileCover.filter((tc)=>!tc.walkable).length;
+    return !this.baseTile.walkable || !!this.tileCover.filter((tc) => !tc.walkable).length;
   }
+
 }
 
 export class TileRenderDataDto {
@@ -43,3 +45,16 @@ export class TileRenderDataDto {
   }
 }
 
+// used to save map. Only those infos are needed
+export class TileDto {
+  position: Position = new Position();
+  frames: Array<number> = [];
+
+  constructor(worldTile?: WorldTileDto) {
+    if (worldTile) {
+      this.position = worldTile.position;
+      this.frames = [...worldTile.tileCover.map(tc=>tc.id),
+        worldTile.baseTile.id]
+    }
+  }
+}

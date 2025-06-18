@@ -20,6 +20,8 @@ const props = withDefaults(defineProps<MTilesListProps>(), {
 
 const selectedFrame = defineModel<FrameDto|null>({required:true});
 const frames = defineModel<Array<FrameDto>>("frames",{required:true});
+const stageName = defineModel<string>("stageName",{required:true});
+
 const frameIndex = computed(() => (index:number) => getRendererFrameId(world.localFrameTimer.value, props.frameDuration, frames.value[index].frameIndex.length));
 
 const handleClick = (frame:FrameDto) => {
@@ -50,7 +52,7 @@ const getFrame = computed(() => (index:number) => {
 
 <template>
   <MBorder inverted class="inventory-container">
-    <MInput class="p-0 justify-content-center" style="width: 100%;height: 20px;"/>
+    <MInput class="p-0 justify-content-center" style="width: 100%;height: 20px;" v-model="stageName"/>
     <div v-if="frames" class="overflow-y-scroll scroll-custom slots-container" style="height: 462px;">
       <div v-for="(frame, index) in frames" class="tile p-3 pb-0 flex justify-content-between" :class="{ 'selected': selectedFrame===frame }" @click="handleClick(frame)">
         <div class="option" :style="getFrame(index)"></div>
