@@ -32,6 +32,11 @@ const selectedFrame:Ref<FrameDto|null> = ref(null);
 
 const frames:Ref<Array<FrameDto>> = ref([]);
 
+const showModal: Ref<boolean> = ref(false);
+const availableStages: Ref<Array<string>> = ref([]);
+const choosenStage: Ref<string> = ref("");
+const loadingStageOptions:Ref<boolean> = ref(false);
+
 const getAvailableFrames = async () => {
   try {
     loadingFrames.value = true;
@@ -43,6 +48,7 @@ const getAvailableFrames = async () => {
   }
 };
 
+// MOCK
 const getTiles = () => {
   tileTypeOptions.value =[
     dropdownDefaultOption,
@@ -79,6 +85,7 @@ const getCoverTiles = () => {
   ];
 };
 
+// Services
 const saveStage = async () => {
   if (!stageName.value) return;
   try {
@@ -99,6 +106,7 @@ const fetchStage = async () => {
   try {
     loadingMap.value = true;
     const tiles = await fetchWorldMap(choosenStage.value);
+    stageName.value = choosenStage.value
     world.setWorldTiles(tiles);
   } catch (error) {
     console.error(error);
@@ -118,6 +126,7 @@ const fetchAvailableMaps = async () => {
   }
 };
 
+// Hooks
 onBeforeMount(() => {
   fetchStage();
   getTiles();
@@ -133,6 +142,7 @@ onUnmounted(() => {
   disconnect();
 });
 
+// Local functions
 const handleSelection = () => {
   if (!tileType.value.value) spriteSet.value=dropdownDefaultOption;
   if (tileType.value.value && spriteSet.value.value) {
@@ -141,24 +151,43 @@ const handleSelection = () => {
   }
 }
 
-const showModal: Ref<boolean> = ref(false);
-const availableStages: Ref<Array<string>> = ref([]);
-const choosenStage: Ref<string> = ref("");
-const loadingStageOptions:Ref<boolean> = ref(false);
-
-const handleModal = () => {
+const handleLoadStageModal = () => {
   showModal.value=true;
   fetchAvailableMaps();
+  loadMapAction.value = true;
 };
+
+const handleSaveStageModal = () => {
+  showModal.value=true;
+  saveMapAction.value = true;
+};
+
+const loadMapAction: Ref<boolean> = ref(false);
+const saveMapAction: Ref<boolean> = ref(false);
+const handleModalAction = () =>{
+  if (loadMapAction.value) {
+    fetchStage();
+  }
+  if (saveMapAction.value) {
+    saveStage();
+  }
+  handleModalClose();
+};
+
+const handleModalClose = () => {
+  loadMapAction.value = false;
+  saveMapAction.value = false;
+}
 
 </script>
 
 <template>
 
-  <MModal needsAction v-model:show="showModal" title="Carregar mapa" @accept="fetchStage()">
+  <MModal needsAction v-model:show="showModal" title="Carregar mapa" @accept="handleModalAction()" @close="handleModalClose">
     <template #content>
       <div class="modal-content-container">
-        <MStageList v-model="choosenStage" v-model:stageList="availableStages" />
+        <MStageList v-if="loadMapAction" v-model="choosenStage" v-model:stageList="availableStages" />
+        <div v-if="saveMapAction">Você deseja salvar o mapa {{ stageName }}? (Será sobrescrito caso já exista)</div>
       </div>
     </template>
   </MModal>
@@ -190,11 +219,11 @@ const handleModal = () => {
           <MTilesList v-model="selectedFrame" v-model:frames="frames" v-model:stageName="stageName"/>
         </MBorder>
         <div>
-          <MButton accent class="w-full mb-5" style="height:30px" label="Carregar mapa" @click="handleModal()"/>
+          <MButton accent class="w-full mb-5" style="height:30px" label="Carregar mapa" @click="handleLoadStageModal()"/>
           <!-- <MButton accent class="w-full mb-5" style="height:30px" label="Carregar JSON" @click="fetchStage()"/> -->
         </div>
         <div>
-          <MButton class="w-full" style="height:30px" label="Salvar mapa" @click="saveStage()"/>
+          <MButton :disabled="!stageName" class="w-full" style="height:30px" label="Salvar mapa" @click="handleSaveStageModal()"/>
         </div>
       </div>
     </div>
