@@ -31,7 +31,7 @@ export const useWorld = () => {
     },
   };
 
-  const updateWorld = (deltaTime:number) => {
+  const updateWorld = (deltaTime: number) => {
     // worldTime.value += deltaTime; // before if "pause" stops worldTimer
     if (!isRunning.value) return;
     worldTime.value += deltaTime; // after if "pause" doesn't stop worldTimer
@@ -54,11 +54,23 @@ export const useWorld = () => {
   };
 
   const formattedTime = () => {
-    const hr = computed(() =>String(Math.trunc(worldTime.value / 3600000)).padStart(2, "0"));
-    const min = computed(() =>String(Math.min(Math.trunc(worldTime.value / 60000 - parseInt(hr.value) * 60), 59)).padStart(2, "0"));
-    const sec = computed(() =>String(Math.min(Math.trunc(worldTime.value / 1000 - parseInt(hr.value) * 3600 - parseInt(min.value) * 60),59)).padStart(2, "0"));
-    return {hr, min, sec};
-  }
+    const hr = computed(() => String(Math.trunc(worldTime.value / 3600000)).padStart(2, "0"));
+    const min = computed(() =>
+      String(Math.min(Math.trunc(worldTime.value / 60000 - parseInt(hr.value) * 60), 59)).padStart(
+        2,
+        "0",
+      ),
+    );
+    const sec = computed(() =>
+      String(
+        Math.min(
+          Math.trunc(worldTime.value / 1000 - parseInt(hr.value) * 3600 - parseInt(min.value) * 60),
+          59,
+        ),
+      ).padStart(2, "0"),
+    );
+    return { hr, min, sec };
+  };
 
   const setWorldState = (running: boolean) => {
     isRunning.value = running;
@@ -71,34 +83,18 @@ export const useWorld = () => {
     });
   };
 
-  // for map creation purpose, only a few info are really important
-  const swapTile = (position: Position, newFrame:FrameDto ) => {
-    const tile = worldTiles.value.find((t) => t.position === position);
-    if (!tile) return;
-    const spriteGroup = getEnumValueByKey(SpriteGroup, newFrame.sprite.spriteGroup);
-    if (spriteGroup === SpriteGroup.BASE_TILE) {
-      tile.baseTile = new TileRenderDataDto(newFrame);
-    }
-    if (spriteGroup === SpriteGroup.COVER_TILE) {
-      const renderData = new TileRenderDataDto(newFrame);
-      tile.tileCover.push(renderData);
-    }
+  const getTile = (tile: WorldTileDto | number) => {
+    return typeof tile === "number" ? worldTiles.value.find((t) => t.id === tile) : tile;
   };
 
-  const getTile = (tile: WorldTileDto|number) => {
-    return typeof tile === "number"
-      ? worldTiles.value.find(t => t.id === tile)
-      : tile;
-  }
-
-  const getTileByCreatureId = (entity:Entity|string|undefined) => {
+  const getTileByCreatureId = (entity: Entity | string | undefined) => {
     if (!entity) return null;
     const entityRef = entities.getEntityOnField(entity);
     if (entityRef) {
-      return worldTiles.value.find(t=>t.presentEntity===entityRef);
+      return worldTiles.value.find((t) => t.presentEntity === entityRef);
     }
     return null;
-  }
+  };
 
   const addEntityOnTile = (entity: Entity | string, tile: WorldTileDto | number) => {
     const entityRef = entities.getEntityOnTeam(entity);
@@ -132,6 +128,29 @@ export const useWorld = () => {
     entities.removeEntityFromField(entityRef);
   };
 
+  //
+  // MAP CREATION
+  //
+  // for map creation purpose, only a few info are really important
+  const swapTile = (position: Position, newFrame: FrameDto) => {
+    const tile = worldTiles.value.find((t) => t.position === position);
+    if (!tile) return;
+    const spriteGroup = getEnumValueByKey(SpriteGroup, newFrame.sprite.spriteGroup);
+    if (spriteGroup === SpriteGroup.BASE_TILE) {
+      tile.baseTile = new TileRenderDataDto(newFrame);
+    }
+    if (spriteGroup === SpriteGroup.COVER_TILE) {
+      const renderData = new TileRenderDataDto(newFrame);
+      tile.tileCover.push(renderData);
+    }
+  };
+
+  const removeLastCover = (position: Position) => {
+    const tile = worldTiles.value.find((t) => t.position === position);
+    if (!tile) return;
+    tile.tileCover.pop();
+  };
+
   return {
     worldTiles,
     worldTime,
@@ -149,5 +168,6 @@ export const useWorld = () => {
     addEntityOnTile,
     removeEntityFromTile,
     swapTile,
+    removeLastCover,
   };
 };

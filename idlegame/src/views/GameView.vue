@@ -64,6 +64,7 @@ onBeforeMount(() => {
 });
 
 onMounted(() => {
+  world.isCreatingWorld.value = false;
   connect();
 });
 

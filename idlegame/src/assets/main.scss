@@ -2,8 +2,10 @@
 
 :root {
   --dark-border: #161616;
-  --medium-border: #252525;
+  --medium-dark-border: #252525;
+  --medium-border: #505050;
   --light-border: #757575;
+  --light-text-color: #757575;
   --color-grey-25: 160, 160, 160;
   --color-grey-50: 110, 110, 110;
   --color-grey-75: 45, 45, 45;
@@ -87,22 +89,52 @@
 
 .justify-content {
   &-start {
-    justify-content: flex-start!important;
+    justify-content: flex-start !important;
   }
+
   &-end {
-    justify-content: flex-end!important;
+    justify-content: flex-end !important;
   }
+
   &-center {
-    justify-content: center!important;
+    justify-content: center !important;
   }
+
   &-between {
-    justify-content: space-between!important;
+    justify-content: space-between !important;
   }
+
   &-around {
-    justify-content: space-around!important;
+    justify-content: space-around !important;
   }
+
   &-evenly {
-    justify-content: space-evenly!important;
+    justify-content: space-evenly !important;
+  }
+}
+.align-content {
+  &-start {
+    align-content: flex-start !important;
+  }
+
+  &-end {
+    align-content: flex-end !important;
+  }
+
+  &-center {
+    align-content: center !important;
+  }
+
+  &-between {
+    align-content: space-between !important;
+  }
+
+  &-around {
+    align-content: space-around !important;
+  }
+
+  &-evenly {
+    align-content: space-evenly !important;
   }
 }
 
@@ -123,8 +155,12 @@
   flex-direction: column !important;
 }
 
-.flex-wrap{
+.flex-wrap {
   flex-wrap: wrap;
+}
+
+.no-wrap {
+  flex-wrap: nowrap;
 }
 
 .flex-grow-1 {
@@ -143,6 +179,9 @@
   overflow-y: scroll !important;
 }
 
+.hide-border {
+  border: 0 !important;
+}
 //// WORLD ////
 ///
 

@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<MTileProps>(), {
   frameDuration: 200, // ms
 });
 
-const emit = defineEmits(["click"]);
+const emit = defineEmits(["click", "contextClick"]);
 
 const isHovering:Ref<boolean> = ref(false);
 
@@ -165,10 +165,12 @@ const onMouseLeave = (event: MouseEvent) => {
     :class="`
       tile-wrapper
       ${isHovering?'is-hovering':''}
-      ${creatures.entityBeingDrag.value?'is-dragging':''}${!props.tile.isBlocked()?'-available':'-blocked'}
+      ${creatures.entityBeingDrag.value?'is-dragging':''}
+      ${!props.tile.isBlocked()?'available':'blocked'}
       ${props.tile.presentEntity?'occupied':''}
     `"
-    @click="emit('click', props.tile.position)"
+    @click="emit('click', props.tile)"
+    @contextmenu.prevent="emit('contextClick', props.tile)"
     :style="getBaseTileFrame"
     :draggable="!!props.tile.presentEntity"
     @dragstart="onDragStart"
@@ -183,14 +185,18 @@ const onMouseLeave = (event: MouseEvent) => {
     <div
       v-for="(ct, index) in props.tile.tileCover"
       class="cover-tile border"
-      :class="{ 'no-pointer': shouldIgnorePointerEvents }"
+      :class="{ 'no-pointer': shouldIgnorePointerEvents,
+        'is-dragging': creatures.entityBeingDrag.value,
+        'available': !props.tile.isBlocked(),
+        'blocked': props.tile.isBlocked()
+      }"
       :style="getCoverTileFrame(index)"
     ></div>
     <MCreature v-if="entityRef" :entity="entityRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
   </div>
 </template>
 
-<style>
+<style lang="scss">
 .tile-wrapper {
   position: relative;
   image-rendering: pixelated;
@@ -203,16 +209,17 @@ const onMouseLeave = (event: MouseEvent) => {
 
 .border:hover,
 .tile-wrapper.is-hovering,
-.tile-wrapper.is-dragging-available.is-hovering {
+.tile-wrapper.is-dragging.available.is-hovering {
   box-shadow: inset 0 0 0 1px #34ff44;
 }
 
-.tile-wrapper.is-dragging-available {
-  background-color: rgba(255,255,255,.2)!important;
+.tile-wrapper.is-dragging.available {
+  background-color: rgba(255,255,255,.1)!important;
 }
 
-.tile-wrapper.is-dragging-blocked {
+.tile-wrapper.is-dragging.blocked {
   background-color: rgba(0,0,0,.4)!important;
+  z-index: 10001;
 }
 
 .cover-tile {
@@ -224,7 +231,7 @@ const onMouseLeave = (event: MouseEvent) => {
 MCreature {
   position: absolute;
   image-rendering: pixelated;
-  z-index: 10001;
+  z-index: 10002;
 }
 
 .no-pointer {
