@@ -145,6 +145,21 @@ export const useWorld = () => {
     }
   };
 
+  const placeSystemCreature = (position: Position, newFrame: FrameDto) => {
+    const tile = worldTiles.value.find((t) => t.position === position);
+    if (!tile) return;
+    const spriteGroup = getEnumValueByKey(SpriteGroup, newFrame.sprite.spriteGroup);
+    if (spriteGroup === SpriteGroup.CREATURE) {
+      // tile.baseTile = new TileRenderDataDto(newFrame);
+    }
+  };
+
+  const removeSystemCreature = (position: Position) => {
+    const tile = worldTiles.value.find((t) => t.position === position);
+    if (!tile) return;
+    // tile.tileCover.pop();
+  };
+
   const removeLastCover = (position: Position) => {
     const tile = worldTiles.value.find((t) => t.position === position);
     if (!tile) return;

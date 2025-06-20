@@ -42,7 +42,7 @@ const getFrame = computed(() => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creatures",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("creature",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size, col, row),
     transform: `translate(${-offset}px, ${-offset}px)`,
   };
 });

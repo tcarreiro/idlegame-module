@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { useWorld } from "@/composable/World.composable";
 import MTile from '../basic/MTile.vue';
-import { computed, onBeforeMount, onMounted, ref, type Ref } from 'vue';
+import { computed } from 'vue';
 import { WorldTileDto } from '@/models/tile.model';
-import { fetchWorldMap } from '@/services/world-map.service';
 import MBorder from '../basic/MBorder.vue';
 import type { FrameDto } from "@/models/frame.model";
 
@@ -25,15 +24,15 @@ const getTileStyle = (tile: WorldTileDto) => ({
   top: `${tile.position.y * world.TILE_CONFIG.tileWorldSize}px`,
 } as const);
 
-const handleClick = (newtile:WorldTileDto) => {
+const handleClick = (tile:WorldTileDto) => {
   if (selectedFrame.value) {
-    world.swapTile(newtile.position, selectedFrame.value);
+    world.swapTile(tile.position, selectedFrame.value);
   }
 }
 
-const handleRightClick = (newtile:WorldTileDto) => {
-  if (newtile.tileCover.length) {
-    world.removeLastCover(newtile.position);
+const handleRightClick = (tile:WorldTileDto) => {
+  if (tile.tileCover.length) {
+    world.removeLastCover(tile.position);
   }
 }
 

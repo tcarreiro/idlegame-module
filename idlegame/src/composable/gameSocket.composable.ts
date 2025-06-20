@@ -8,6 +8,7 @@ import {
 } from "@/services/websocket.service";
 import type { IMessage } from "@stomp/stompjs";
 import { useWorld } from "./World.composable";
+import { useApp } from "@/stores/app";
 
 const subscriptions: Ref<Array<string>> = ref([]);
 const isConnected = ref(false);
@@ -17,12 +18,16 @@ const lastTickTimer: Ref<number> = ref(0);
 const world = useWorld();
 
 export const useGameSocket = () => {
+
+  const { username } = useApp();
   const connect = () => {
     connectWebSocket(
       () => {
         isConnected.value = true;
         subscribeToChannel("global");
         subscribeTickManager();
+        subscribeToBattleChannel(`/user/${username}/queue/battle/update`);
+        subscribeToBattleChannel(`/user/${username}/queue/battle/finished`);
       },
       (error) => {
         console.error("Erro na conexão WebSocket:", error);
@@ -44,8 +49,17 @@ export const useGameSocket = () => {
   };
 
   const subscribeToChannel = (channel: string) => {
-    subscribe(`/topic/game/${channel}`, onGameMessage);
-    subscriptions.value.push(channel);
+    if (!subscriptions.value.includes(channel)) {
+      subscribe(`/topic/game/${channel}`, onGameMessage);
+      subscriptions.value.push(channel);
+    }
+  };
+
+  const subscribeToBattleChannel = (channel: string) => {
+    if (!subscriptions.value.includes(channel)) {
+      subscribe(`${channel}`, onGameMessage);
+      subscriptions.value.push(channel);
+    }
   };
 
   const unsubscribeToChannel = (channel: string) => {
@@ -86,6 +100,7 @@ export const useGameSocket = () => {
     subscriptions,
     connect,
     subscribeToChannel,
+    subscribeToBattleChannel,
     disconnect,
     sendGameMessage,
   };

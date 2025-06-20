@@ -9,8 +9,8 @@ export const dropdownDefaultOption:MDropDownItem = { label: 'Selecione', value: 
 export enum SpriteGroup {
   BASE_TILE = "baseTile",
   COVER_TILE = "coverTile",
-  CREATURE = "creature",
   PROP = "prop",
+  CREATURE = "creature",
 }
 
 export enum EntityState {

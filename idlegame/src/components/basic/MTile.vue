@@ -73,7 +73,7 @@ const getCreatureFrame = () => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creatures",`${entityRef.value.name}_${entityRef.value.renderData.entityState}`, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("creature",`${entityRef.value.name}_${entityRef.value.renderData.entityState}`, atlasNumCols, size, col, row),
     transform: `translate(${-offset}px, ${-offset}px)`,
   };
 };

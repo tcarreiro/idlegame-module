@@ -1,3 +1,4 @@
+import { useApp } from '@/stores/app';
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 
@@ -17,8 +18,14 @@ const subscriptions = new Map<string, (message: IMessage) => void>();
 export const connectWebSocket = (onConnect?: () => void, onError?: (error: string) => void) => {
   if (stompClient?.connected) return
 
+  const {token} = useApp();
+  if (!token) {
+    console.error("Please, login first");
+    return;
+  }
+
   stompClient = new Client({
-    webSocketFactory: () => new SockJS(socketUrl),
+    webSocketFactory: () => new SockJS(`${socketUrl}?token=${token}`),
     // debug: (str) => console.log('STOMP:', str),
     reconnectDelay: 5000,
     onConnect: () => {
