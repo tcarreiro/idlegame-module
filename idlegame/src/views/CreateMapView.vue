@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import MCreateWorldGrid from '@/components/baseContainer/MCreateWorldGrid.vue';
 import MTilesList from '@/components/baseContainer/MTilesList.vue';
 import MWorldGrid from '@/components/baseContainer/MWorldGrid.vue';
 import MBorder from '@/components/basic/MBorder.vue';
@@ -54,12 +53,13 @@ const getTiles = () => {
     dropdownDefaultOption,
     { label: 'Tile', value: getEnumKeyByValue(SpriteGroup, SpriteGroup.BASE_TILE)?.toString() },
     { label: 'Prop', value: getEnumKeyByValue(SpriteGroup, SpriteGroup.COVER_TILE)?.toString() },
+    { label: 'Creature', value: getEnumKeyByValue(SpriteGroup, SpriteGroup.CREATURE)?.toString() },
   ];
 };
 
 const getCoverTiles = () => {
   spriteSetOptions.value = [
-    {
+  {
       label: 'Cave',
       category: 'baseTile',
       items: [
@@ -68,6 +68,12 @@ const getCoverTiles = () => {
         { label: 'caveDirt3', value: "caveDirt3" },
         { label: 'caveDirt4', value: "caveDirt4" },
         { label: 'caveDirt5', value: "caveDirt5" },
+      ]
+    },
+    {
+      label: 'Water',
+      category: 'baseTile',
+      items: [
         { label: 'waterDeep1', value: "waterDeep1" },
         { label: 'waterDeep2', value: "waterDeep2" },
       ]
@@ -78,8 +84,21 @@ const getCoverTiles = () => {
       items: [
         { label: 'caveCeiling1', value: "caveCeiling1" },
         { label: 'caveCeilingCorners1', value: "caveCeilingCorners1" },
+      ]
+    },
+    {
+      label: 'Water',
+      category: 'coverTile',
+      items: [
         { label: 'waterStraight1', value: "waterStraight1" },
         { label: 'waterCorners1', value: "waterCorners1" },
+      ]
+    },
+    {
+      label: 'Creature',
+      category: 'creature',
+      items: [
+        { label: 'minotaur', value: "minotaur" },
       ]
     },
   ];

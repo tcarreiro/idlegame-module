@@ -8,11 +8,12 @@ import { useEntities } from '@/composable/entity.composable';
 import { useGameSocket } from '@/composable/gameSocket.composable';
 import { Entity } from '@/models/entity.model';
 import type { WorldTileDto } from '@/models/tile.model';
-import { fetchWorldMap } from '@/services/world-map.service';
+import { fetchWorldMap, startBattle } from '@/services/world-map.service';
 import { EntitySize, EntityState, Orientation } from '@/utils/constants';
 import { onBeforeMount, onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { useApp } from '../stores/app';
 
-const {connect, disconnect, world} = useGameSocket();
+const {connect, disconnect, subscriptions, world, subscribeToBattleChannel} = useGameSocket();
 const creatures = useEntities();
 const loadingMap:Ref<boolean> = ref(false);
 
@@ -33,7 +34,7 @@ const getWorldData = async () => {
 
 const createTeam = () => {
   const bestiarySlots:Ref<Array<Entity>> = ref(
-    Array.from({ length: 6 }, (o, i) => {
+    Array.from({ length: 5 }, (o, i) => {
       const model = new Entity();
       model.id = "id" + i;
       model.name = "orcspearman";
@@ -72,6 +73,11 @@ onUnmounted(() => {
   disconnect();
 });
 
+const startBattleService = async () => {
+  await startBattle();
+  world.setWorldState(true);
+}
+
 </script>
 
 <template>
@@ -92,7 +98,7 @@ onUnmounted(() => {
           <MButton secondary class="w-full mb-5" style="height:30px" label="Selecionar Mapa"/>
         </div>
         <div>
-          <MButton class="w-full" style="height:60px" label="INICIAR"/>
+          <MButton :disabled="world.isRunning.value || !creatures.entitiesOnField.value.length" class="w-full" style="height:60px" label="INICIAR" @click="startBattleService()"/>
         </div>
       </div>
     </div>

@@ -40,10 +40,11 @@ const getFrame = computed(() => {
   const offset = size - world.TILE_CONFIG.tileWorldSize;
   const atlasNumCols = sizeConfig.atlasNumCols;
 
+  console.log(frameIndex.value)
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creatures",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size, col, row),
-    transform: `translate(${-offset}px, ${-offset}px)`,
+    ...getDrawFromAtlas("creature",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size, col, row),
+    transform: `translate(${-offset + props.entity.renderData.position.x}px, ${-offset + props.entity.renderData.position.y}px)`,
   };
 });
 

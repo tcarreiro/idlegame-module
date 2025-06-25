@@ -73,7 +73,7 @@ const getCreatureFrame = () => {
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creatures",`${entityRef.value.name}_${entityRef.value.renderData.entityState}`, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("creature",`${entityRef.value.name}_${entityRef.value.renderData.entityState}`, atlasNumCols, size, col, row),
     transform: `translate(${-offset}px, ${-offset}px)`,
   };
 };
@@ -192,7 +192,7 @@ const onMouseLeave = (event: MouseEvent) => {
       }"
       :style="getCoverTileFrame(index)"
     ></div>
-    <MCreature v-if="entityRef" :entity="entityRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
+    <MCreature v-if="entityRef" class="creature" :entity="entityRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
   </div>
 </template>
 
@@ -228,7 +228,8 @@ const onMouseLeave = (event: MouseEvent) => {
   z-index: 10000;
 }
 
-MCreature {
+MCreature,
+.creature {
   position: absolute;
   image-rendering: pixelated;
   z-index: 10002;

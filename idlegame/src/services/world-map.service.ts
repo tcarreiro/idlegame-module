@@ -28,8 +28,26 @@ export const fetchFramesByGroupAndName = async (
   });
 }
 
-export const saveStageService = async (stageName:string, tiles: Array<TileDto>): Promise<StageDto> => {
+export const saveStageService = async (
+  stageName: string,
+  tiles: Array<TileDto>,
+): Promise<StageDto> => {
   return getAxios().post(`/tiles/stage`, tiles, {
     params: { stageName },
   });
+};
+
+export const startBattle = async (): Promise<void> => {
+  const body = {
+    regionId: 1,
+    playersCreatures: [
+      {
+        creatureId: 1,
+        x: 10,
+        y: 5,
+        equippedItemsIds: [],
+      },
+    ],
+  };
+  return getAxios().post(`/battle/start`, body);
 };
