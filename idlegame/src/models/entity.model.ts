@@ -25,4 +25,5 @@ export class RenderData {
   worldFrameId: Array<number> = [0];
   orientation: Orientation = Orientation.SOUTH;
   entitySizeConfig: EntitySize = EntitySize.SMALL;
+  position:Position = new Position();
 }

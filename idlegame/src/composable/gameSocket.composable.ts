@@ -25,7 +25,7 @@ export const useGameSocket = () => {
       () => {
         isConnected.value = true;
         subscribeToChannel("global");
-        subscribeTickManager();
+        // subscribeTickManager();
         subscribeToBattleChannel(`/user/${username}/queue/battle/update`);
         subscribeToBattleChannel(`/user/${username}/queue/battle/finished`);
       },
@@ -50,14 +50,14 @@ export const useGameSocket = () => {
 
   const subscribeToChannel = (channel: string) => {
     if (!subscriptions.value.includes(channel)) {
-      subscribe(`/topic/game/${channel}`, onGameMessage);
+      subscribe(`/topic/game/${channel}`, onBattleMessage);
       subscriptions.value.push(channel);
     }
   };
 
   const subscribeToBattleChannel = (channel: string) => {
     if (!subscriptions.value.includes(channel)) {
-      subscribe(`${channel}`, onGameMessage);
+      subscribe(`${channel}`, onBattleMessage);
       subscriptions.value.push(channel);
     }
   };
@@ -67,9 +67,19 @@ export const useGameSocket = () => {
     subscriptions.value.filter((ch) => channel !== ch); // TODO: better remove
   };
 
-  const onGameMessage = (msg: IMessage) => {
+  const onBattleMessage = (msg: IMessage) => {
     const data = JSON.parse(msg.body);
-    console.log("Mensagem broadcast do jogo:", data);
+    // console.log("Mensagem broadcast do jogo:", data);
+    if (data.hasOwnProperty("battleResult")) {
+      world.setWorldState(false)
+    } else {
+      const newTickTimer = Number(data.timeStamp); //server time in millis
+      deltaTime.value = newTickTimer - lastTickTimer.value;
+      if (lastTickTimer.value !== 0) { // ignore first tick
+        world.updateWorld(deltaTime.value);
+      }
+      lastTickTimer.value = newTickTimer;
+    }
     messages.value.push(data);
   };
 

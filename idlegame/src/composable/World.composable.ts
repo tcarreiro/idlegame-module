@@ -4,7 +4,7 @@ import { WorldTileDto, TileRenderDataDto } from "@/models/tile.model";
 import { RenderData, type Entity } from "@/models/entity.model";
 import type { Position } from "@/models/generics.model";
 import type { FrameDto } from "@/models/frame.model";
-import { SpriteGroup } from "@/utils/constants";
+import { EntityState, Orientation, SpriteGroup } from "@/utils/constants";
 import { getEnumValueByKey } from "@/utils/functions";
 
 const entities = useEntities();
@@ -13,7 +13,7 @@ const frameDeltaTime = 15;
 let frameRendererLoopInterval: number | null = null;
 const localFrameTimer: Ref<number> = ref(0);
 
-const isRunning: Ref<boolean> = ref(true);
+const isRunning: Ref<boolean> = ref(false);
 const worldTime: Ref<number> = ref(0);
 
 const worldTiles:Ref<Array<WorldTileDto>> = ref([]);
@@ -36,6 +36,17 @@ export const useWorld = () => {
     if (!isRunning.value) return;
     worldTime.value += deltaTime; // after if "pause" doesn't stop worldTimer
     startFrameTimer();
+
+    console.log("deltaTime:",deltaTime);
+    entities.entitiesOnField.value.forEach(ent=>{
+      console.log("entity:",ent.name);
+      console.log("posX:",ent.renderData.position.x);
+      ent.renderData.orientation=Orientation.EAST;
+      ent.renderData.entityState=EntityState.MOVING;
+      ent.renderData.slotFrameId=[0, 4, 8, 12, 16, 20, 24]
+      ent.renderData.position.x+=deltaTime/1000*64;
+    });
+
   };
 
   const startFrameTimer = () => {
@@ -104,7 +115,6 @@ export const useWorld = () => {
     // check entity source
     const isEntityOnField = !!entities.getEntityOnField(entity);
 
-    // if from field
     if (isEntityOnField) {
       const srcTileRef = getTileByCreatureId(entityRef); // src Tile
       if (srcTileRef) {
@@ -112,10 +122,16 @@ export const useWorld = () => {
         if (tileRef.presentEntity) {
           // occupied tile
           srcTileRef.presentEntity = tileRef.presentEntity;
+          entities.addEntityToField(tileRef.presentEntity, srcTileRef.position);
         }
       }
+    } else {
+      if (tileRef.presentEntity) {
+        // occupied tile
+        entities.removeEntityFromField(tileRef.presentEntity);
+      }
     }
-    entities.addEntityToField(entityRef);
+    entities.addEntityToField(entityRef, tileRef.position);
     tileRef.presentEntity = entityRef;
   };
 

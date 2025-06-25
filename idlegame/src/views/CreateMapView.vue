@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import MCreateWorldGrid from '@/components/baseContainer/MCreateWorldGrid.vue';
 import MTilesList from '@/components/baseContainer/MTilesList.vue';
 import MWorldGrid from '@/components/baseContainer/MWorldGrid.vue';
 import MBorder from '@/components/basic/MBorder.vue';

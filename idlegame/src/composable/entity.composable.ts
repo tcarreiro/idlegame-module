@@ -1,4 +1,5 @@
 import type { Entity } from "@/models/entity.model";
+import { Position } from "@/models/generics.model";
 import { EntitySize } from "@/utils/constants";
 import { ref, type Ref } from "vue";
 
@@ -77,15 +78,18 @@ export const useEntities = () => {
     }
   };
 
-  const addEntityToField = (entity: Entity|string) => {
+  const addEntityToField = (entity: Entity|string, position: Position) => {
     const entityRef = getEntityOnTeam(entity);
-    if (entityRef && !entitiesOnField.value.includes(entityRef)) {
-      entityRef.onField = true;
-      entitiesOnField.value.push(entityRef);
+    if (entityRef) {
+      if (!entitiesOnField.value.includes(entityRef)) {
+        entityRef.onField = true;
+        entitiesOnField.value.push(entityRef);
+      }
     }
   };
 
   const removeEntityFromField = (entity: Entity|string) => {
+    console.log(entity);
     const entityRef = getEntityOnTeam(entity);
     if (entityRef) {
       const index = entitiesOnField.value.findIndex(e=>e===entityRef);
@@ -93,19 +97,20 @@ export const useEntities = () => {
         entitiesOnField.value.splice(index, 1);
       }
       entityRef.onField = false;
+      entityRef.renderData.position = new Position();
     }
   };
 
   const getEntityOnTeam = (entity: Entity|string) => {
     return typeof entity === "string" 
       ? entitiesOnTeam.value.find(e => e.id === entity)
-      : entity;
+      : entitiesOnTeam.value.find(e => e === entity);
   }
 
   const getEntityOnField = (entity: Entity|string) => {
     return typeof entity === "string" 
       ? entitiesOnField.value.find(e => e.id === entity)
-      : entity;
+      : entitiesOnField.value.find(e => e === entity);
   }
 
   return {

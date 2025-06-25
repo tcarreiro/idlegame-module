@@ -75,6 +75,7 @@ onUnmounted(() => {
 
 const startBattleService = async () => {
   await startBattle();
+  world.setWorldState(true);
 }
 
 </script>
@@ -97,7 +98,7 @@ const startBattleService = async () => {
           <MButton secondary class="w-full mb-5" style="height:30px" label="Selecionar Mapa"/>
         </div>
         <div>
-          <MButton class="w-full" style="height:60px" label="INICIAR" @click="startBattleService()"/>
+          <MButton :disabled="world.isRunning.value || !creatures.entitiesOnField.value.length" class="w-full" style="height:60px" label="INICIAR" @click="startBattleService()"/>
         </div>
       </div>
     </div>
