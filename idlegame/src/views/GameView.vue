@@ -68,7 +68,7 @@ const startBattleService = async () => {
   <div class="main-content cross-container">
     <div class="content-wrapper">
       <MBorder class="noise-container mr-5" thickness="thick">
-        <MWorldGrid class="m-3"/>
+        <MWorldGrid class="m-3 overflow-hidden"/>
       </MBorder>
       <div class="flex-column" style="width: 184px;">
         <MBorder class="noise-container mb-5" inverted>

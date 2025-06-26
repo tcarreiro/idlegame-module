@@ -58,6 +58,7 @@ export class BaseStatsDto {
 export class RenderDataDto {
   entityState: EntityState = EntityState.IDLE;
   frameIndex: Array<number> = [0];
+  slotOffset: Position = new Position();
   sprite: SpriteDto = new SpriteDto();
   orientation: Orientation = Orientation.SOUTH;
   position: Position = new Position();

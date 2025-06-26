@@ -122,7 +122,7 @@ export const useWorld = () => {
         if (tileRef.presentCreature) {
           // occupied tile
           srcTileRef.presentCreature = tileRef.presentCreature;
-          creatures.addCreatureToField(tileRef.presentCreature, srcTileRef.position);
+          creatures.addCreatureToField(tileRef.presentCreature, srcTileRef);
         }
       }
     } else {
@@ -131,7 +131,7 @@ export const useWorld = () => {
         creatures.removeCreatureFromField(tileRef.presentCreature);
       }
     }
-    creatures.addCreatureToField(creatureRef, tileRef.position);
+    creatures.addCreatureToField(creatureRef, tileRef);
     tileRef.presentCreature = creatureRef;
   };
 

@@ -23,7 +23,6 @@ const emit = defineEmits(["click", "contextClick"]);
 
 const isHovering:Ref<boolean> = ref(false);
 
-const creatureRef = computed(()=> creatures.getCreatureOnField(props.tile.presentCreature??-1));
 const enablePlaceCreature = computed(()=>!props.tile.isBlocked() && creatures.creatureBeingDrag.value);
 const baseTileFrameIndex = computed(() => getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.tile.baseTile.frameId.length));
 const coverTileFrameIndex = computed(() => (index:number) => getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.tile.tileCover[index].frameId.length));
@@ -63,23 +62,6 @@ const getBaseTileFrame = computed(() => {
   };
 });
 
-const getCreatureFrame = () => {
-  if (!props.tile || !creatureRef.value) return;
-  creatureRef.value.baseCreature.renderData.entityState = EntityState.IDLE;
-  creatureRef.value.baseCreature.renderData.orientation = Orientation.SOUTH;
-  const size = creatureRef.value.baseCreature.renderData.sprite.frameSize * world.TILE_CONFIG.tileWorldScale;
-  const atlasNumCols = creatureRef.value.baseCreature.renderData.sprite.width/creatureRef.value.baseCreature.renderData.sprite.frameSize;
-  const col = creatureRef.value.baseCreature.renderData.orientation;
-  const row = creatureRef.value.baseCreature.renderData.frameIndex[baseTileFrameIndex.value];
-  const offset = size - world.TILE_CONFIG.tileWorldSize;
-
-  return {
-    ...drawSize(size),
-    ...getDrawFromAtlas("creature",`${creatureRef.value.baseCreature.name}_${creatureRef.value.baseCreature.renderData.entityState}`, atlasNumCols, size, col, row),
-    transform: `translate(${-offset}px, ${-offset}px)`,
-  };
-};
-
 const onDragEnter = (event: DragEvent) => {
   if (!event.target) return;
   isHovering.value = true;
@@ -90,62 +72,15 @@ const onDragLeave = (event: DragEvent) => {
 };
 
 const onDragOver = (event: DragEvent) => {
-  event.dataTransfer!.dropEffect = 'move'; // ou 'copy', se for cópia
+  event.dataTransfer!.dropEffect = 'move';
 };
 
 const onDrop = (event:DragEvent) => {
   isHovering.value = false;
   if (!event.dataTransfer) return;
-  const source = JSON.parse(event.dataTransfer!.getData("application/json")).source;
   if (enablePlaceCreature.value) {
     world.addCreatureOnTile(creatures.creatureBeingDrag.value!, props.tile);
   }
-}
-
-const onDragStart = (event:DragEvent) => {
-  if (!event.dataTransfer || !creatureRef.value) return;
-
-  // Create preview
-  const dragPreview = document.createElement('div');
-
-  const creatureStyle = getCreatureFrame();
-  // const style = getFrame.value;
-  if (creatureStyle) {
-    const previewStyle = {
-      ...creatureStyle,
-      position: 'absolute',
-      top: '-1000px',
-      left: '-1000px',
-      border: 'none',
-      cursor: 'grabbing',
-      imageRendering: 'pixelated',
-    };
-
-    Object.entries(previewStyle).forEach(([key, value]) => {
-      (dragPreview.style as any)[key] = value;
-    });
-  }
-
-  document.body.appendChild(dragPreview);
-  // Cursor position inside preview
-  const offsetX = (dragPreview.offsetWidth) / 2;
-  const offsetY = (dragPreview.offsetHeight) / 2;
-
-  event.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
-
-  event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('application/json', JSON.stringify({source:"tile", entity:props.tile}));
-
-  // remove preview
-  setTimeout(() => {
-    document.body.removeChild(dragPreview);
-  }, 0);
-
-  creatures.setDraggingCreature(creatureRef.value);
-}
-
-const onDragEnd = (event: DragEvent) => {
-  creatures.setDraggingCreature(null);
 }
 
 const onMouseEnter = (event: MouseEvent) => {
@@ -174,27 +109,27 @@ const onMouseLeave = (event: MouseEvent) => {
     @click="emit('click', props.tile)"
     @contextmenu.prevent="emit('contextClick', props.tile)"
     :style="getBaseTileFrame"
-    :draggable="!!props.tile.presentCreature"
-    @dragstart="onDragStart"
-    @dragend="onDragEnd"
     @dragover.prevent="onDragOver"
     @drop="onDrop"
     @dragenter.self="onDragEnter"
     @dragleave.self="onDragLeave"
+    >
+    <!-- :draggable="!!props.tile.presentCreature"
+    @dragstart="onDragStart"
+    @dragend="onDragEnd"
     @mouseenter="onMouseEnter"
-    @mouseleave="onMouseLeave"
-  >
+    @mouseleave="onMouseLeave" -->
     <div
       v-for="(ct, index) in props.tile.tileCover"
       class="cover-tile border"
-      :class="{ 'no-pointer': shouldIgnorePointerEvents,
+      :class="{ 'no-pointer-events': shouldIgnorePointerEvents,
         'is-dragging': creatures.creatureBeingDrag.value,
         'available': !props.tile.isBlocked(),
         'blocked': props.tile.isBlocked()
       }"
       :style="getCoverTileFrame(index)"
     ></div>
-    <MCreature v-if="creatureRef" class="creature" :creature="creatureRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
+    <!-- <MCreature v-if="creatureRef" class="creature" :creature="creatureRef" :class="{ 'no-pointer-events': shouldIgnorePointerEvents }"/> -->
   </div>
 </template>
 
@@ -228,17 +163,6 @@ const onMouseLeave = (event: MouseEvent) => {
   position: absolute;
   image-rendering: pixelated;
   z-index: 10000;
-}
-
-MCreature,
-.creature {
-  position: absolute;
-  image-rendering: pixelated;
-  z-index: 10002;
-}
-
-.no-pointer {
-  pointer-events: none;
 }
 
 </style>

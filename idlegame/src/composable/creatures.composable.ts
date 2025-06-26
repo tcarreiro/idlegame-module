@@ -1,5 +1,6 @@
 import type { CreatureDto } from "@/models/creature.model";
 import { Position } from "@/models/generics.model";
+import type { WorldTileDto } from "@/models/tile.model";
 import { EntitySize } from "@/utils/constants";
 import { ref, type Ref } from "vue";
 
@@ -77,12 +78,13 @@ export const useCreatures = () => {
     }
   };
 
-  const addCreatureToField = (creature: CreatureDto | number, position: Position) => {
+  const addCreatureToField = (creature: CreatureDto | number, tile: WorldTileDto) => {
     const creatureRef = getCreatureOnTeam(creature);
     if (creatureRef) {
+      creatureRef.onField = true;
+      creatureRef.baseCreature.renderData.position = tile.position;
+      tile.presentCreature = creatureRef;
       if (!creaturesOnField.value.includes(creatureRef)) {
-        creatureRef.onField = true;
-        creatureRef.baseCreature.renderData.position = position;
         creaturesOnField.value.push(creatureRef);
       }
     }

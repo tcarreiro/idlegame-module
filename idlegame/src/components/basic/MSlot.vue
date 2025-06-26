@@ -57,7 +57,6 @@ const onDragStart = (event:DragEvent) => {
   if (style) {
     const previewStyle = {
       ...style,
-      transform: 'scale(2.0)',
       position: 'absolute',
       top: '-1000px',
       left: '-1000px',
@@ -79,7 +78,6 @@ const onDragStart = (event:DragEvent) => {
   event.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
 
   event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('application/json', JSON.stringify({source:"slot"}));
 
   // remove preview
   setTimeout(() => {

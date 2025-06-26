@@ -5,8 +5,11 @@ import { computed } from 'vue';
 import { WorldTileDto } from '@/models/tile.model';
 import MBorder from '../basic/MBorder.vue';
 import type { FrameDto } from "@/models/frame.model";
+import { useCreatures } from "@/composable/creatures.composable";
+import MCreature from "../basic/MCreature.vue";
 
 const world = useWorld();
+const creatures = useCreatures();
 
 // creation purpose
 const selectedFrame = defineModel<FrameDto|null>({required:false, default:null});
@@ -46,11 +49,24 @@ const handleRightClick = (tile:WorldTileDto) => {
         :key="index"
         :style="getTileStyle(tile)"
       >
-      <MTile :tile="tile" @click="handleClick" @contextClick="handleRightClick"/>
+        <MTile :tile="tile" @click="handleClick" @contextClick="handleRightClick"/>
+      </div>
+      <div
+        v-for="(creature, index) in creatures.creaturesOnField.value"
+        :key="index"
+      >
+        <MCreature v-if="creature" class="creature" :creature="creature" />
       </div>
     </div>
   </MBorder>
 </template>
 
 <style scoped>
+
+.creature {
+  position: absolute;
+  image-rendering: pixelated;
+  z-index: 10002;
+}
+
 </style>
