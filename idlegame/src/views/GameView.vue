@@ -4,27 +4,25 @@ import MProfile from '@/components/baseContainer/MProfile.vue';
 import MWorldGrid from '@/components/baseContainer/MWorldGrid.vue';
 import MBorder from '@/components/basic/MBorder.vue';
 import MButton from '@/components/forms/MButton.vue';
-import { useEntities } from '@/composable/entity.composable';
 import { useGameSocket } from '@/composable/gameSocket.composable';
-import { Entity } from '@/models/entity.model';
 import type { WorldTileDto } from '@/models/tile.model';
 import { fetchWorldMap, startBattle } from '@/services/world-map.service';
-import { EntitySize, EntityState, Orientation } from '@/utils/constants';
 import { onBeforeMount, onMounted, onUnmounted, ref, type Ref } from 'vue';
-import { useApp } from '../stores/app';
+import type { CreatureDto } from '@/models/creature.model';
+import { fetchUserTeam } from '@/services/creatures.service';
+import { useCreatures } from '@/composable/creatures.composable';
 
-const {connect, disconnect, subscriptions, world, subscribeToBattleChannel} = useGameSocket();
-const creatures = useEntities();
+const {connect, disconnect, world, subscribeToBattleChannel} = useGameSocket();
+const creatures = useCreatures();
 const loadingMap:Ref<boolean> = ref(false);
+const loadingTeam:Ref<boolean> = ref(false);
 
 const getWorldData = async () => {
   const tiles:Ref<Array<WorldTileDto>> = ref([]);
   try {
     loadingMap.value = true;
     tiles.value = await fetchWorldMap();
-
     world.setWorldTiles(tiles.value);
-
   } catch (error) {
     console.error(error);
   } finally {
@@ -32,36 +30,22 @@ const getWorldData = async () => {
   }
 };
 
-const createTeam = () => {
-  const bestiarySlots:Ref<Array<Entity>> = ref(
-    Array.from({ length: 5 }, (o, i) => {
-      const model = new Entity();
-      model.id = "id" + i;
-      model.name = "orcspearman";
-      model.renderData.entityState = EntityState.IDLE;
-      model.renderData.slotFrameId = [0];
-      model.renderData.worldFrameId = [0, 1, 2, 3, 4, 5, 6, 7];
-      model.renderData.orientation = Orientation.SOUTH;
-      return model;
-    })
-  );
-
-  bestiarySlots.value[1].name="minotaurguard";
-  bestiarySlots.value[2].name="minotaur";
-  bestiarySlots.value[3].name="deer";
-  bestiarySlots.value[3].renderData.orientation=Orientation.WEST;
-  bestiarySlots.value[3].renderData.entitySizeConfig=EntitySize.BIG;
-  bestiarySlots.value[3].renderData.slotOffset={x:25, y:40, z:0};
-  bestiarySlots.value[4].name="dragonlord";
-  bestiarySlots.value[4].renderData.entitySizeConfig=EntitySize.BIG;
-  bestiarySlots.value[4].renderData.slotOffset={x:0, y:32, z:0};
-
-  creatures.setEntityTeam(bestiarySlots.value);
-};
+const getUserTeam = async () => {
+  const bestiarySlots:Ref<Array<CreatureDto>> = ref([]);
+  try {
+    loadingTeam.value = true;
+    bestiarySlots.value = await fetchUserTeam();
+    creatures.setCreatureTeam(bestiarySlots.value);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    loadingTeam.value = false;
+  }
+}
 
 onBeforeMount(() => {
   getWorldData();
-  createTeam();
+  getUserTeam();
 });
 
 onMounted(() => {
@@ -88,17 +72,17 @@ const startBattleService = async () => {
       </MBorder>
       <div class="flex-column" style="width: 184px;">
         <MBorder class="noise-container mb-5" inverted>
-          <MProfile v-model="creatures.entitiesOnTeam.value[0]" style="height: 40px;"/>
+          <MProfile v-if="creatures.creaturesOnTeam.value.length" v-model="creatures.creaturesOnTeam.value[0]" style="height: 40px;"/>
         </MBorder>
         <MBorder class="noise-container mb-5 flex-grow-1" thickness="thick">
-          <div class="flex justify-content-center">Bestiário ({{ creatures.entitiesOnTeam.value.length }}/{{ 100 }})</div>
-          <MInventory v-model="creatures.entitiesOnTeam.value"/>
+          <div class="flex justify-content-center no-select">Bestiário ({{ creatures.creaturesOnTeam.value.length }}/{{ 100 }})</div>
+          <MInventory v-if="creatures.creaturesOnTeam.value.length" v-model="creatures.creaturesOnTeam.value"/>
         </MBorder>
         <div>
           <MButton secondary class="w-full mb-5" style="height:30px" label="Selecionar Mapa"/>
         </div>
         <div>
-          <MButton :disabled="world.isRunning.value || !creatures.entitiesOnField.value.length" class="w-full" style="height:60px" label="INICIAR" @click="startBattleService()"/>
+          <MButton :disabled="world.isRunning.value || !creatures.creaturesOnField.value.length" class="w-full" style="height:60px" label="INICIAR" @click="startBattleService()"/>
         </div>
       </div>
     </div>

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { Entity } from '@/models/entity.model';
 import MSlot from '../basic/MSlot.vue';
+import type { CreatureDto } from '@/models/creature.model';
 
-const slot = defineModel<Entity>({required:true});
+const slot = defineModel<CreatureDto>({required:true});
 
 </script>
 
 <template>
   <div class="overflow-y-auto flex flex-wrap scroll-custom slots-container" style="height: 479px; gap:5px">
-    <MSlot :entity="slot" :size="39"/>
+    <MSlot :creature="slot" :size="39"/>
   </div>
 </template>
 

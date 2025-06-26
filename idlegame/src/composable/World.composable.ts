@@ -1,13 +1,13 @@
 import { computed, ref, type Ref } from "vue";
-import { useEntities } from "./entity.composable";
+import { useCreatures } from "./creatures.composable";
 import { WorldTileDto, TileRenderDataDto } from "@/models/tile.model";
-import { RenderData, type Entity } from "@/models/entity.model";
 import type { Position } from "@/models/generics.model";
 import type { FrameDto } from "@/models/frame.model";
-import { EntityState, Orientation, SpriteGroup } from "@/utils/constants";
+import { SpriteGroup } from "@/utils/constants";
 import { getEnumValueByKey } from "@/utils/functions";
+import type { CreatureDto } from "@/models/creature.model";
 
-const entities = useEntities();
+const creatures = useCreatures();
 
 const frameDeltaTime = 15;
 let frameRendererLoopInterval: number | null = null;
@@ -37,14 +37,14 @@ export const useWorld = () => {
     worldTime.value += deltaTime; // after if "pause" doesn't stop worldTimer
     startFrameTimer();
 
-    console.log("deltaTime:",deltaTime);
-    entities.entitiesOnField.value.forEach(ent=>{
-      console.log("entity:",ent.name);
-      console.log("posX:",ent.renderData.position.x);
-      ent.renderData.orientation=Orientation.EAST;
-      ent.renderData.entityState=EntityState.MOVING;
-      ent.renderData.slotFrameId=[0, 4, 8, 12, 16, 20, 24]
-      ent.renderData.position.x+=deltaTime/1000*64;
+    // console.log("deltaTime:",deltaTime);
+    creatures.creaturesOnField.value.forEach(ent=>{
+      // console.log("entity:",ent.name);
+      // console.log("posX:",ent.renderData.position.x);
+      // ent.renderData.orientation=Orientation.EAST;
+      // ent.renderData.entityState=EntityState.MOVING;
+      // ent.renderData.slotFrameId=[0, 4, 8, 12, 16, 20, 24]
+      // ent.renderData.position.x+=deltaTime/1000*64;
     });
 
   };
@@ -98,50 +98,50 @@ export const useWorld = () => {
     return typeof tile === "number" ? worldTiles.value.find((t) => t.id === tile) : tile;
   };
 
-  const getTileByCreatureId = (entity: Entity | string | undefined) => {
-    if (!entity) return null;
-    const entityRef = entities.getEntityOnField(entity);
-    if (entityRef) {
-      return worldTiles.value.find((t) => t.presentEntity === entityRef);
+  const getTileByCreatureId = (creature: CreatureDto | number | undefined) => {
+    if (!creature) return null;
+    const creatureRef = creatures.getCreatureOnField(creature);
+    if (creatureRef) {
+      return worldTiles.value.find((t) => t.presentCreature === creatureRef);
     }
     return null;
   };
 
-  const addEntityOnTile = (entity: Entity | string, tile: WorldTileDto | number) => {
-    const entityRef = entities.getEntityOnTeam(entity);
+  const addCreatureOnTile = (creature: CreatureDto | number, tile: WorldTileDto | number) => {
+    const creatureRef = creatures.getCreatureOnTeam(creature);
     const tileRef = getTile(tile);
-    if (!entityRef || !tileRef) return;
+    if (!creatureRef || !tileRef) return;
 
-    // check entity source
-    const isEntityOnField = !!entities.getEntityOnField(entity);
+    // check creature source
+    const isCreatureOnField = !!creatures.getCreatureOnField(creature);
 
-    if (isEntityOnField) {
-      const srcTileRef = getTileByCreatureId(entityRef); // src Tile
+    if (isCreatureOnField) {
+      const srcTileRef = getTileByCreatureId(creatureRef); // src Tile
       if (srcTileRef) {
-        srcTileRef.presentEntity = null;
-        if (tileRef.presentEntity) {
+        srcTileRef.presentCreature = null;
+        if (tileRef.presentCreature) {
           // occupied tile
-          srcTileRef.presentEntity = tileRef.presentEntity;
-          entities.addEntityToField(tileRef.presentEntity, srcTileRef.position);
+          srcTileRef.presentCreature = tileRef.presentCreature;
+          creatures.addCreatureToField(tileRef.presentCreature, srcTileRef.position);
         }
       }
     } else {
-      if (tileRef.presentEntity) {
+      if (tileRef.presentCreature) {
         // occupied tile
-        entities.removeEntityFromField(tileRef.presentEntity);
+        creatures.removeCreatureFromField(tileRef.presentCreature);
       }
     }
-    entities.addEntityToField(entityRef, tileRef.position);
-    tileRef.presentEntity = entityRef;
+    creatures.addCreatureToField(creatureRef, tileRef.position);
+    tileRef.presentCreature = creatureRef;
   };
 
-  const removeEntityFromTile = (entity: Entity | string, tile: WorldTileDto | number) => {
-    const entityRef = entities.getEntityOnTeam(entity);
+  const removeCreatureFromTile = (creature: CreatureDto | number, tile: WorldTileDto | number) => {
+    const creatureRef = creatures.getCreatureOnTeam(creature);
     const tileRef = getTile(tile);
-    if (!entityRef || !tileRef) return;
+    if (!creatureRef || !tileRef) return;
 
-    tileRef.presentEntity = null;
-    entities.removeEntityFromField(entityRef);
+    tileRef.presentCreature = null;
+    creatures.removeCreatureFromField(creatureRef);
   };
 
   //
@@ -196,8 +196,8 @@ export const useWorld = () => {
     setWorldTiles,
     getTile,
     getTileByCreatureId,
-    addEntityOnTile,
-    removeEntityFromTile,
+    addCreatureOnTile,
+    removeCreatureFromTile,
     swapTile,
     removeLastCover,
   };

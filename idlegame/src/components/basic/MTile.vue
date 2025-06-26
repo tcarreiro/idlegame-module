@@ -3,11 +3,12 @@ import { useWorld } from "@/composable/World.composable";
 import type { WorldTileDto } from '@/models/tile.model';
 import { computed, ref, type Ref } from 'vue';
 import MCreature from './MCreature.vue';
-import { useEntities } from '@/composable/entity.composable';
+import { useCreatures } from '@/composable/creatures.composable';
 import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
+import { EntityState, Orientation } from "@/utils/constants";
 
 const world = useWorld();
-const creatures = useEntities();
+const creatures = useCreatures();
 
 type MTileProps = {
   tile: WorldTileDto,
@@ -22,11 +23,11 @@ const emit = defineEmits(["click", "contextClick"]);
 
 const isHovering:Ref<boolean> = ref(false);
 
-const entityRef = computed(()=> creatures.getEntityOnField(props.tile.presentEntity??""));
-const enablePlaceCreature = computed(()=>!props.tile.isBlocked() && creatures.entityBeingDrag.value);
+const creatureRef = computed(()=> creatures.getCreatureOnField(props.tile.presentCreature??-1));
+const enablePlaceCreature = computed(()=>!props.tile.isBlocked() && creatures.creatureBeingDrag.value);
 const baseTileFrameIndex = computed(() => getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.tile.baseTile.frameId.length));
 const coverTileFrameIndex = computed(() => (index:number) => getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.tile.tileCover[index].frameId.length));
-const shouldIgnorePointerEvents = computed(() => !!creatures.entityBeingDrag.value);
+const shouldIgnorePointerEvents = computed(() => !!creatures.creatureBeingDrag.value);
 
 const getCoverTileFrame = computed(() => (index:number) => {
 
@@ -63,17 +64,18 @@ const getBaseTileFrame = computed(() => {
 });
 
 const getCreatureFrame = () => {
-  if (!props.tile || !entityRef.value) return;
-  const sizeConfig = creatures.sizeConfig(entityRef.value.renderData.entitySizeConfig);
-  const size = sizeConfig.creatureWorldSize;
-  const atlasNumCols = world.TILE_CONFIG.atlasNumCols;
-  const col = entityRef.value.renderData.orientation;
-  const row = entityRef.value.renderData.slotFrameId[baseTileFrameIndex.value];
+  if (!props.tile || !creatureRef.value) return;
+  creatureRef.value.baseCreature.renderData.entityState = EntityState.IDLE;
+  creatureRef.value.baseCreature.renderData.orientation = Orientation.SOUTH;
+  const size = creatureRef.value.baseCreature.renderData.sprite.frameSize * world.TILE_CONFIG.tileWorldScale;
+  const atlasNumCols = creatureRef.value.baseCreature.renderData.sprite.width/creatureRef.value.baseCreature.renderData.sprite.frameSize;
+  const col = creatureRef.value.baseCreature.renderData.orientation;
+  const row = creatureRef.value.baseCreature.renderData.frameIndex[baseTileFrameIndex.value];
   const offset = size - world.TILE_CONFIG.tileWorldSize;
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creature",`${entityRef.value.name}_${entityRef.value.renderData.entityState}`, atlasNumCols, size, col, row),
+    ...getDrawFromAtlas("creature",`${creatureRef.value.baseCreature.name}_${creatureRef.value.baseCreature.renderData.entityState}`, atlasNumCols, size, col, row),
     transform: `translate(${-offset}px, ${-offset}px)`,
   };
 };
@@ -96,12 +98,12 @@ const onDrop = (event:DragEvent) => {
   if (!event.dataTransfer) return;
   const source = JSON.parse(event.dataTransfer!.getData("application/json")).source;
   if (enablePlaceCreature.value) {
-    world.addEntityOnTile(creatures.entityBeingDrag.value!, props.tile);
+    world.addCreatureOnTile(creatures.creatureBeingDrag.value!, props.tile);
   }
 }
 
 const onDragStart = (event:DragEvent) => {
-  if (!event.dataTransfer || !entityRef.value) return;
+  if (!event.dataTransfer || !creatureRef.value) return;
 
   // Create preview
   const dragPreview = document.createElement('div');
@@ -139,11 +141,11 @@ const onDragStart = (event:DragEvent) => {
     document.body.removeChild(dragPreview);
   }, 0);
 
-  creatures.setDraggingEntity(entityRef.value);
+  creatures.setDraggingCreature(creatureRef.value);
 }
 
 const onDragEnd = (event: DragEvent) => {
-  creatures.setDraggingEntity(null);
+  creatures.setDraggingCreature(null);
 }
 
 const onMouseEnter = (event: MouseEvent) => {
@@ -165,14 +167,14 @@ const onMouseLeave = (event: MouseEvent) => {
     :class="`
       tile-wrapper
       ${isHovering?'is-hovering':''}
-      ${creatures.entityBeingDrag.value?'is-dragging':''}
+      ${creatures.creatureBeingDrag.value?'is-dragging':''}
       ${!props.tile.isBlocked()?'available':'blocked'}
-      ${props.tile.presentEntity?'occupied':''}
+      ${props.tile.presentCreature?'occupied':''}
     `"
     @click="emit('click', props.tile)"
     @contextmenu.prevent="emit('contextClick', props.tile)"
     :style="getBaseTileFrame"
-    :draggable="!!props.tile.presentEntity"
+    :draggable="!!props.tile.presentCreature"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
     @dragover.prevent="onDragOver"
@@ -186,13 +188,13 @@ const onMouseLeave = (event: MouseEvent) => {
       v-for="(ct, index) in props.tile.tileCover"
       class="cover-tile border"
       :class="{ 'no-pointer': shouldIgnorePointerEvents,
-        'is-dragging': creatures.entityBeingDrag.value,
+        'is-dragging': creatures.creatureBeingDrag.value,
         'available': !props.tile.isBlocked(),
         'blocked': props.tile.isBlocked()
       }"
       :style="getCoverTileFrame(index)"
     ></div>
-    <MCreature v-if="entityRef" class="creature" :entity="entityRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
+    <MCreature v-if="creatureRef" class="creature" :creature="creatureRef" :class="{ 'no-pointer': shouldIgnorePointerEvents }"/>
   </div>
 </template>
 

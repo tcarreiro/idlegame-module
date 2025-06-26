@@ -219,6 +219,10 @@
 ///
 ///
 
+.no-select {
+  user-select: none;
+}
+
 .noise-container {
   background-image: url('/sprites/background/noise.png');
   background-blend-mode: soft-light;
