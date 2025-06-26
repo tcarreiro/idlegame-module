@@ -28,14 +28,18 @@ const getTileStyle = (tile: WorldTileDto) => ({
 } as const);
 
 const handleClick = (tile:WorldTileDto) => {
-  if (selectedFrame.value) {
-    world.swapTile(tile.position, selectedFrame.value);
+  if (world.isCreatingWorld.value) {
+    if (selectedFrame.value) {
+      world.swapTile(tile.position, selectedFrame.value);
+    }
   }
 }
 
 const handleRightClick = (tile:WorldTileDto) => {
-  if (tile.tileCover.length) {
-    world.removeLastCover(tile.position);
+  if (world.isCreatingWorld.value) {
+    if (tile.tileCover.length) {
+      world.removeLastCover(tile.position);
+    }
   }
 }
 

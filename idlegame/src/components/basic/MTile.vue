@@ -2,10 +2,8 @@
 import { useWorld } from "@/composable/World.composable";
 import type { WorldTileDto } from '@/models/tile.model';
 import { computed, ref, type Ref } from 'vue';
-import MCreature from './MCreature.vue';
 import { useCreatures } from '@/composable/creatures.composable';
 import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
-import { EntityState, Orientation } from "@/utils/constants";
 
 const world = useWorld();
 const creatures = useCreatures();
@@ -98,13 +96,16 @@ const onMouseLeave = (event: MouseEvent) => {
 </script>
 
 <template>
+  <!-- ${!props.tile.isBlocked()?'available':'blocked'} -->
   <div
     :class="`
       tile-wrapper
+      ${world.isCreatingWorld.value?'border':''}
       ${isHovering?'is-hovering':''}
       ${creatures.creatureBeingDrag.value?'is-dragging':''}
-      ${!props.tile.isBlocked()?'available':'blocked'}
       ${props.tile.presentCreature?'occupied':''}
+      ${!props.tile.isBlocked()?'available':''}
+      ${(props.tile.position.x+props.tile.position.y)%2===0 ? 'light': 'dark'}
     `"
     @click="emit('click', props.tile)"
     @contextmenu.prevent="emit('contextClick', props.tile)"
@@ -114,22 +115,17 @@ const onMouseLeave = (event: MouseEvent) => {
     @dragenter.self="onDragEnter"
     @dragleave.self="onDragLeave"
     >
-    <!-- :draggable="!!props.tile.presentCreature"
-    @dragstart="onDragStart"
-    @dragend="onDragEnd"
-    @mouseenter="onMouseEnter"
-    @mouseleave="onMouseLeave" -->
     <div
       v-for="(ct, index) in props.tile.tileCover"
-      class="cover-tile border"
-      :class="{ 'no-pointer-events': shouldIgnorePointerEvents,
-        'is-dragging': creatures.creatureBeingDrag.value,
-        'available': !props.tile.isBlocked(),
-        'blocked': props.tile.isBlocked()
-      }"
+      :class="`
+        cover-tile
+        ${world.isCreatingWorld.value?'border':''}
+        ${shouldIgnorePointerEvents?'no-pointer-events':''}
+        ${creatures.creatureBeingDrag.value?'is-dragging':''}
+      `"
       :style="getCoverTileFrame(index)"
     ></div>
-    <!-- <MCreature v-if="creatureRef" class="creature" :creature="creatureRef" :class="{ 'no-pointer-events': shouldIgnorePointerEvents }"/> -->
+    <div v-if="props.tile.isBlocked() && creatures.creatureBeingDrag.value" class="blocked"></div>
   </div>
 </template>
 
@@ -145,16 +141,22 @@ const onMouseLeave = (event: MouseEvent) => {
 }
 
 .border:hover,
-.tile-wrapper.is-hovering,
-.tile-wrapper.is-dragging.available.is-hovering {
+.tile-wrapper.is-hovering.available {
   box-shadow: inset 0 0 0 1px #34ff44;
 }
 
-.tile-wrapper.is-dragging.available {
-  background-color: rgba(255,255,255,.1)!important;
+.tile-wrapper.is-dragging.available.light {
+  background-color: rgba(255,255,255,.08)!important;
 }
 
-.tile-wrapper.is-dragging.blocked {
+.tile-wrapper.is-dragging.available.dark {
+  background-color: rgba(255,255,255,.13)!important;
+}
+
+.blocked {
+  position: inherit;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0,0,0,.4)!important;
   z-index: 10001;
 }

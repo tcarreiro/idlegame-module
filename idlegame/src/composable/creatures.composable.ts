@@ -1,7 +1,7 @@
 import type { CreatureDto } from "@/models/creature.model";
 import { Position } from "@/models/generics.model";
 import type { WorldTileDto } from "@/models/tile.model";
-import { EntitySize } from "@/utils/constants";
+import { EntitySize, EntityState, Orientation } from "@/utils/constants";
 import { ref, type Ref } from "vue";
 
 
@@ -82,7 +82,9 @@ export const useCreatures = () => {
     const creatureRef = getCreatureOnTeam(creature);
     if (creatureRef) {
       creatureRef.onField = true;
-      creatureRef.baseCreature.renderData.position = tile.position;
+      creatureRef.baseCreature.renderData.position = new Position(tile.position.x, tile.position.y, tile.position.z);
+      creatureRef.baseCreature.renderData.entityState = EntityState.IDLE;
+      creatureRef.baseCreature.renderData.orientation = Orientation.SOUTH;
       tile.presentCreature = creatureRef;
       if (!creaturesOnField.value.includes(creatureRef)) {
         creaturesOnField.value.push(creatureRef);

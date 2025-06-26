@@ -37,6 +37,7 @@ const frameIndex = computed(() => {
 const getFrame = computed(() => {
   if (!props.creature) return;
 
+  console.log(props.creature.baseCreature.renderData.orientation)
   let size = props.size;
   if (!size) size = props.creature.baseCreature.renderData.sprite.frameSize * world.TILE_CONFIG.tileWorldScale;
 

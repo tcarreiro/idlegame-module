@@ -3,7 +3,7 @@ import { useCreatures } from "./creatures.composable";
 import { WorldTileDto, TileRenderDataDto } from "@/models/tile.model";
 import type { Position } from "@/models/generics.model";
 import type { FrameDto } from "@/models/frame.model";
-import { SpriteGroup } from "@/utils/constants";
+import { EntityState, Orientation, SpriteGroup } from "@/utils/constants";
 import { getEnumValueByKey } from "@/utils/functions";
 import type { CreatureDto } from "@/models/creature.model";
 
@@ -38,13 +38,13 @@ export const useWorld = () => {
     startFrameTimer();
 
     // console.log("deltaTime:",deltaTime);
-    creatures.creaturesOnField.value.forEach(ent=>{
-      // console.log("entity:",ent.name);
+    creatures.creaturesOnField.value.forEach(creature=>{
+      console.log("creature:", creature.nickName);
       // console.log("posX:",ent.renderData.position.x);
-      // ent.renderData.orientation=Orientation.EAST;
-      // ent.renderData.entityState=EntityState.MOVING;
-      // ent.renderData.slotFrameId=[0, 4, 8, 12, 16, 20, 24]
-      // ent.renderData.position.x+=deltaTime/1000*64;
+      creature.baseCreature.renderData.orientation=Orientation.EAST;
+      creature.baseCreature.renderData.entityState = EntityState.MOVING;
+      creature.baseCreature.renderData.frameIndex = [0, 4, 8, 12, 16, 20, 24, 28];
+      creature.baseCreature.renderData.position.x += (deltaTime / 1000) * 1.5;
     });
 
   };

@@ -31,24 +31,23 @@ const frameIndex = computed(() => {
 
 const getFrame = computed(() => {
   if (!props.creature) return;
-  props.creature.baseCreature.renderData.entityState = EntityState.IDLE;
-  props.creature.baseCreature.renderData.orientation = Orientation.SOUTH;
+  // props.creature.baseCreature.renderData.entityState = EntityState.IDLE;
   let size = props.size;
   if (!size) size = props.creature.baseCreature.renderData.sprite.frameSize * world.TILE_CONFIG.tileWorldScale;
 
-  const col = props.creature.baseCreature.renderData.orientation;
+  const col = Orientation.SOUTH;
   const row = props.creature.baseCreature.renderData.frameIndex[frameIndex.value];
   const atlasNumCols = props.creature.baseCreature.renderData.sprite.width/props.creature.baseCreature.renderData.sprite.frameSize;
   const scale = 1.2*props.creature.baseCreature.renderData.sprite.frameSize/world.TILE_CONFIG.tileAtlasSize;
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creature",`${props.creature.baseCreature.name}_${props.creature.baseCreature.renderData.entityState}`, atlasNumCols, size*scale, col, row, new Position(0,0,0)),
+    ...getDrawFromAtlas("creature",`${props.creature.baseCreature.name}_${EntityState.IDLE}`, atlasNumCols, size*scale, col, row, new Position(0,0,0)),
   };
 });
 
 const onDragStart = (event:DragEvent) => {
-  if (!event.dataTransfer) return
+  if (!event.dataTransfer || !canDrag.value) return
 
   // Create preview
   const dragPreview = document.createElement('div');
