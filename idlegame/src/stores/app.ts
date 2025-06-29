@@ -8,7 +8,7 @@ export type AppState = {
 export const useApp = defineStore("idle-app", {
   state: (): AppState => ({
     token:
-      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0Y2FycmVpcm8iLCJyb2xlcyI6WyJBRE1JTiIsIkdBTUVfTUFTVEVSIiwiUExBWUVSIl0sImlhdCI6MTc1MDkwMTIxNywiZXhwIjoxNzUwOTg3NjE3fQ.ZgXtQ7e8xIhbqZERv8ab0uUkuKUggZlULlP2Lgg5bLU",
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0Y2FycmVpcm8iLCJyb2xlcyI6WyJBRE1JTiIsIkdBTUVfTUFTVEVSIiwiUExBWUVSIl0sImlhdCI6MTc1MTA0ODAzOCwiZXhwIjoxNzUxMTM0NDM4fQ.qqYf9TGRGzjjnOzM7Va_KAo7AjM92khpLMJVpj12ckE",
     username: "tcarreiro",
   }),
   persist: true,

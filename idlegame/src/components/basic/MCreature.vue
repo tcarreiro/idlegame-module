@@ -2,8 +2,10 @@
 import { useCreatures } from '@/composable/creatures.composable';
 import { useWorld } from "@/composable/World.composable";
 import type { CreatureDto } from '@/models/creature.model';
+import { EntityState } from '@/utils/constants';
+import { calculateMoveDuration } from '@/utils/functions';
 import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
-import { computed } from 'vue';
+import { computed, onMounted, ref, type Ref } from 'vue';
 
 ///////
 /////// OnField Entity Component
@@ -19,10 +21,12 @@ type MCreatureProps = {
 };
 
 const props = withDefaults(defineProps<MCreatureProps>(), {
-  frameDuration: 200, // ms
+  frameDuration: 120, // ms
 });
 
 const emit = defineEmits(["click"]);
+
+const creatureRef:Ref<HTMLElement|null> = ref(null);
 
 const shouldIgnorePointerEvents = computed(() => {
   const beingDragged = creatures.creatureBeingDrag.value;
@@ -37,7 +41,6 @@ const frameIndex = computed(() => {
 const getFrame = computed(() => {
   if (!props.creature) return;
 
-  console.log(props.creature.baseCreature.renderData.orientation)
   let size = props.size;
   if (!size) size = props.creature.baseCreature.renderData.sprite.frameSize * world.TILE_CONFIG.tileWorldScale;
 
@@ -46,11 +49,15 @@ const getFrame = computed(() => {
   const offset = size - world.TILE_CONFIG.tileWorldSize;
   const atlasNumCols = props.creature.baseCreature.renderData.sprite.width/props.creature.baseCreature.renderData.sprite.frameSize;
 
+  const speed = props.creature.stats.baseSpeed + props.creature.stats.modSpeed;
+  const duration = calculateMoveDuration(1*64,speed);
+
   return {
     ...drawSize(size),
     ...getDrawFromAtlas("creature",`${props.creature.baseCreature.name}_${props.creature.baseCreature.renderData.entityState}`, atlasNumCols, size, col, row),
     transform: `translate(${-offset + props.creature.baseCreature.renderData.position.x * world.TILE_CONFIG.tileWorldSize}px,
                           ${-offset + props.creature.baseCreature.renderData.position.y * world.TILE_CONFIG.tileWorldSize}px)`,
+    transition: `transform ${duration}ms linear`
   };
 });
 
@@ -99,6 +106,14 @@ const onDragEnd = (event: DragEvent) => {
   creatures.setDraggingCreature(null);
 }
 
+onMounted(()=>{
+  creatureRef.value?.addEventListener('transitionend', (event: TransitionEvent) => {
+    if (event.propertyName === 'transform') {
+      props.creature.baseCreature.renderData.entityState = EntityState.IDLE;
+    }
+  });
+});
+
 </script>
 
 <template>
@@ -110,6 +125,7 @@ const onDragEnd = (event: DragEvent) => {
     :draggable="true"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
+    ref="creatureRef"
   >
   </div>
 </template>

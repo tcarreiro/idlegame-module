@@ -1,4 +1,4 @@
-import { Rectangle } from "@/models/generics.model";
+import { Position, Rectangle } from "@/models/generics.model";
 
 export const newRectangle = (rect: Rectangle): Rectangle => {
   return new Rectangle(rect.x, rect.y, rect.width, rect.height);
@@ -23,3 +23,11 @@ export function getEnumValueByKey<T extends Record<string, string>>(
 ): T[keyof T] | undefined {
   return enumType[key as keyof T];
 }
+
+export function samePosition(position1:Position, position2:Position) {
+  return position1.x === position2.x && position1.y === position2.y && position1.z === position2.z;
+}
+
+export const calculateMoveDuration = (dst:number, speed: number): number => {
+  return 1000 * dst/speed;
+};

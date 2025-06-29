@@ -3,11 +3,14 @@ import { useCreatures } from "./creatures.composable";
 import { WorldTileDto, TileRenderDataDto } from "@/models/tile.model";
 import type { Position } from "@/models/generics.model";
 import type { FrameDto } from "@/models/frame.model";
-import { EntityState, Orientation, SpriteGroup } from "@/utils/constants";
+import { Direction, EntityState, Orientation, SpriteGroup } from "@/utils/constants";
 import { getEnumValueByKey } from "@/utils/functions";
 import type { CreatureDto } from "@/models/creature.model";
+import { CommandState, CommandType, type BattleCommand } from "@/models/battle-message.model";
+import { useBattleHandler } from "./battleHandler.composable";
 
 const creatures = useCreatures();
+const battleHandler = useBattleHandler();
 
 const frameDeltaTime = 15;
 let frameRendererLoopInterval: number | null = null;
@@ -31,22 +34,36 @@ export const useWorld = () => {
     },
   };
 
-  const updateWorld = (deltaTime: number) => {
+  const updateWorld = (deltaTime: number, commands:Array<BattleCommand>) => {
     // worldTime.value += deltaTime; // before if "pause" stops worldTimer
     if (!isRunning.value) return;
-    worldTime.value += deltaTime; // after if "pause" doesn't stop worldTimer
+
+    worldTime.value += deltaTime;
     startFrameTimer();
 
-    // console.log("deltaTime:",deltaTime);
-    creatures.creaturesOnField.value.forEach(creature=>{
-      console.log("creature:", creature.nickName);
-      // console.log("posX:",ent.renderData.position.x);
-      creature.baseCreature.renderData.orientation=Orientation.EAST;
-      creature.baseCreature.renderData.entityState = EntityState.MOVING;
-      creature.baseCreature.renderData.frameIndex = [0, 4, 8, 12, 16, 20, 24, 28];
-      creature.baseCreature.renderData.position.x += (deltaTime / 1000) * 1.5;
-    });
+    processBattleCommands(commands);
+  };
 
+  const processBattleCommands = (commands: Array<BattleCommand>) => {
+    for (const cmd of commands.filter(command=>command.commandState!==CommandState.FINISHED)) {
+      const creature = creatures.getCreatureOnField(cmd.creatureId);
+      if (!creature) continue;
+
+      switch (cmd.type) {
+        case CommandType.MOVE:
+          battleHandler.handleMoveCommand(creature, cmd);
+          break;
+        case CommandType.ATTACK:
+          battleHandler.handleAttackCommand(creature, cmd);
+          break;
+        case CommandType.USE_SKILL:
+          battleHandler.handleSkillCommand(creature, cmd);
+          break;
+        case CommandType.STOP:
+          battleHandler.handleStopCommand(creature, cmd);
+          break;
+      }
+    }
   };
 
   const startFrameTimer = () => {
