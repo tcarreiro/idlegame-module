@@ -167,6 +167,10 @@
   flex-grow: 1;
 }
 
+.overflow-hidden {
+  overflow: hidden !important;
+}
+
 .overflow-y-hidden {
   overflow-y: hidden !important;
 }
@@ -218,6 +222,14 @@
 /// HUD
 ///
 ///
+
+.no-select {
+  user-select: none;
+}
+
+.no-pointer-events {
+  pointer-events: none!important;
+}
 
 .noise-container {
   background-image: url('/sprites/background/noise.png');

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { useEntities } from '@/composable/entity.composable';
-import type { Entity } from '@/models/entity.model';
+import { useCreatures } from '@/composable/creatures.composable';
 import { useWorld } from "@/composable/World.composable";
+import type { CreatureDto } from '@/models/creature.model';
+import { Position } from '@/models/generics.model';
+import { EntityState, Orientation } from '@/utils/constants';
 import { drawSize, getDrawFromAtlas, getRendererFrameId } from '@/utils/renderer';
 import { computed } from 'vue';
 
 const world = useWorld();
-const creatures = useEntities();
+const creatures = useCreatures();
 
 type MSlotProps = {
-  entity: Entity,
+  creature: CreatureDto,
   size?:number,
   frameDuration?: number,
 };
@@ -20,32 +22,32 @@ const props = withDefaults(defineProps<MSlotProps>(), {
 
 const emit = defineEmits(["click"]);
 
-const canDrag = computed(()=>!!props.entity.name && !props.entity.onField);
+const canDrag = computed(()=>!props.creature.onField);
 
 const frameIndex = computed(() => {
-  if (!props.entity) return 0;
-  return getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.entity.renderData.slotFrameId.length);
+  if (!props.creature) return 0;
+  return getRendererFrameId(world.localFrameTimer.value, props.frameDuration, props.creature.baseCreature.renderData.frameIndex.length);
 });
 
 const getFrame = computed(() => {
-  if (!props.entity) return;
+  if (!props.creature) return;
+  // props.creature.baseCreature.renderData.entityState = EntityState.IDLE;
   let size = props.size;
-  const sizeConfig = creatures.sizeConfig(props.entity.renderData.entitySizeConfig);
-  if (!size) size = sizeConfig.creatureWorldSize;
+  if (!size) size = props.creature.baseCreature.renderData.sprite.frameSize * world.TILE_CONFIG.tileWorldScale;
 
-  const col = props.entity.renderData.orientation;
-  const row = props.entity.renderData.slotFrameId[frameIndex.value];
-  const atlasNumCols = sizeConfig.atlasNumCols;
-  const scale = 1.2*sizeConfig.creatureAtlasSize/world.TILE_CONFIG.tileAtlasSize;
+  const col = Orientation.SOUTH;
+  const row = props.creature.baseCreature.renderData.frameIndex[frameIndex.value];
+  const atlasNumCols = props.creature.baseCreature.renderData.sprite.width/props.creature.baseCreature.renderData.sprite.frameSize;
+  const scale = 1.2*props.creature.baseCreature.renderData.sprite.frameSize/world.TILE_CONFIG.tileAtlasSize;
 
   return {
     ...drawSize(size),
-    ...getDrawFromAtlas("creature",`${props.entity.name}_${props.entity.renderData.entityState}`, atlasNumCols, size*scale, col, row, props.entity.renderData.slotOffset),
+    ...getDrawFromAtlas("creature",`${props.creature.baseCreature.name}_${EntityState.IDLE}`, atlasNumCols, size*scale, col, row, new Position(0,0,0)),
   };
 });
 
 const onDragStart = (event:DragEvent) => {
-  if (!event.dataTransfer) return
+  if (!event.dataTransfer || !canDrag.value) return
 
   // Create preview
   const dragPreview = document.createElement('div');
@@ -54,7 +56,6 @@ const onDragStart = (event:DragEvent) => {
   if (style) {
     const previewStyle = {
       ...style,
-      transform: 'scale(2.0)',
       position: 'absolute',
       top: '-1000px',
       left: '-1000px',
@@ -76,18 +77,17 @@ const onDragStart = (event:DragEvent) => {
   event.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
 
   event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('application/json', JSON.stringify({source:"slot"}));
 
   // remove preview
   setTimeout(() => {
     document.body.removeChild(dragPreview);
   }, 0);
 
-  creatures.setDraggingEntity(props.entity);
+  creatures.setDraggingCreature(props.creature);
 }
 
 const onDragEnd = (event: DragEvent) => {
-  creatures.setDraggingEntity(null);
+  creatures.setDraggingCreature(null);
 }
 
 </script>
@@ -96,7 +96,7 @@ const onDragEnd = (event: DragEvent) => {
   <div
     class="slot-wrapper"
     :style="getFrame"
-    @click="emit('click', props.entity)"
+    @click="emit('click', props.creature)"
     :draggable="canDrag"
     @dragstart="onDragStart"
     @dragend="onDragEnd"

@@ -25,6 +25,15 @@ export enum Orientation {
   WEST,
 }
 
+const DirectionMap: Record<Orientation, { x: number; y: number }> = {
+  [Orientation.NORTH]: { x: 0, y: -1 },
+  [Orientation.EAST]: { x: 1, y: 0 },
+  [Orientation.SOUTH]: { x: 0, y: 1 },
+  [Orientation.WEST]: { x: -1, y: 0 },
+};
+
+export const Direction = (orientation: Orientation) => DirectionMap[orientation];
+
 export enum EntitySize {
   SMALL = "SMALL",
   MEDIUM = "MEDIUM",

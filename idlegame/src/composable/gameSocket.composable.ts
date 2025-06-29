@@ -9,6 +9,8 @@ import {
 import type { IMessage } from "@stomp/stompjs";
 import { useWorld } from "./World.composable";
 import { useApp } from "@/stores/app";
+import { CommandState, CommandType, type BattleCommand } from "@/models/battle-message.model";
+import { Position } from "@/models/generics.model";
 
 const subscriptions: Ref<Array<string>> = ref([]);
 const isConnected = ref(false);
@@ -16,6 +18,18 @@ const messages = ref<Array<IMessage>>([]);
 const deltaTime: Ref<number> = ref(0);
 const lastTickTimer: Ref<number> = ref(0);
 const world = useWorld();
+
+let commands: Array<BattleCommand> = [
+  {
+    creatureId: 2,
+    type: CommandType.MOVE,
+    srcPosition: new Position(0, 0, 0),
+    targetPosition: new Position(1, 0, 0),
+    commandStartTime: 0,
+    // Estado atual da execução do comando (back pode enviar como QUEUED, Ongoing, etc)
+    commandState: CommandState.QUEUED,
+  },
+];
 
 export const useGameSocket = () => {
 
@@ -48,6 +62,10 @@ export const useGameSocket = () => {
     sendMessage(`/app/${event}`, payload);
   };
 
+  const sendBattleStateMessage = (event: string, payload: any) => {
+    sendMessage(`/app/${event}`, payload);
+  };
+
   const subscribeToChannel = (channel: string) => {
     if (!subscriptions.value.includes(channel)) {
       subscribe(`/topic/game/${channel}`, onBattleMessage);
@@ -69,35 +87,39 @@ export const useGameSocket = () => {
 
   const onBattleMessage = (msg: IMessage) => {
     const data = JSON.parse(msg.body);
-    // console.log("Mensagem broadcast do jogo:", data);
+    // console.log(data);
     if (data.hasOwnProperty("battleResult")) {
       world.setWorldState(false)
     } else {
+      // const commands:Array<BattleCommand> = data as Array<BattleCommand>;
+
+
+
       const newTickTimer = Number(data.timeStamp); //server time in millis
       deltaTime.value = newTickTimer - lastTickTimer.value;
       if (lastTickTimer.value !== 0) { // ignore first tick
-        world.updateWorld(deltaTime.value);
+        world.updateWorld(deltaTime.value, commands);
       }
       lastTickTimer.value = newTickTimer;
     }
     messages.value.push(data);
   };
 
-  const newTick = (tickMsg: IMessage) => {
-    const newTickTimer = Number(tickMsg.body); //server time in millis
-    deltaTime.value = newTickTimer - lastTickTimer.value;
-    if (lastTickTimer.value !== 0) { // ignore first tick
-      world.updateWorld(deltaTime.value);
-    }
-    lastTickTimer.value = newTickTimer;
-  };
+  // const newTick = (tickMsg: IMessage) => {
+  //   const newTickTimer = Number(tickMsg.body); //server time in millis
+  //   deltaTime.value = newTickTimer - lastTickTimer.value;
+  //   if (lastTickTimer.value !== 0) { // ignore first tick
+  //     world.updateWorld(deltaTime.value);
+  //   }
+  //   lastTickTimer.value = newTickTimer;
+  // };
 
-  const subscribeTickManager = () => {
-    if (!subscriptions.value.includes("tick")) {
-      subscribe("/topic/game/tick", newTick);
-      subscriptions.value.push("tick");
-    }
-  };
+  // const subscribeTickManager = () => {
+  //   if (!subscriptions.value.includes("tick")) {
+  //     subscribe("/topic/game/tick", newTick);
+  //     subscriptions.value.push("tick");
+  //   }
+  // };
 
   onBeforeUnmount(() => {
     disconnect();

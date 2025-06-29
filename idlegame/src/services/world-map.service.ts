@@ -4,7 +4,7 @@ import type { FrameDto } from "@/models/frame.model";
 import type { StageDto } from "@/models/stage.model";
 
 export const fetchWorldMap = async (stageName?: string): Promise<Array<WorldTileDto>> => {
-  const finalStageName = stageName && stageName.trim() !== "" ? stageName : "Base";
+  const finalStageName = stageName && stageName.trim() !== "" ? stageName : "Teste";
   return getAxios().get(`/tiles/stage`, {
     params: {
       stageName: finalStageName,

@@ -23,7 +23,7 @@ const emit = defineEmits(["click"]);
     @click="emit('click')"
   >
   <i v-if="props.icon"></i>
-  <span>{{ props.label }}</span>
+  <span class="no-select">{{ props.label }}</span>
   </button>
 </template>
 

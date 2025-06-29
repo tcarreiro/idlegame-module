@@ -1,4 +1,4 @@
-import type { Entity } from "./entity.model";
+import type { CreatureDto } from "./creature.model";
 import type { FrameDto } from "./frame.model";
 import { Position } from "./generics.model";
 import { SpriteDto } from "./sprite.model";
@@ -12,7 +12,7 @@ export class WorldTileDto {
 
   // objects: Array<TileRenderData> = []; // FUTURE
   // effects: Array<TileRenderData> = []; // FUTURE
-  presentEntity: Entity | null = null; // ref to Entity
+  presentCreature: CreatureDto | null = null; // ref to Entity
 
   static fromJSON(json: unknown): WorldTileDto {
     const raw = json as Partial<WorldTileDto>;

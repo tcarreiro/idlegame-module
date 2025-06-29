@@ -1,4 +1,8 @@
+import type { CreatureDto } from "@/models/creature.model";
 import { Position } from "@/models/generics.model";
+import { computed } from "vue";
+import { EntityState, Orientation } from "./constants";
+import { useWorld } from "@/composable/World.composable";
 
 export const getRendererFrameId = (timer: number, frameDuration: number, numOfFrames: number): number => {
     return Math.floor(timer / frameDuration) % numOfFrames;
